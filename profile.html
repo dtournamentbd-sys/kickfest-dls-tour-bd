@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>প্রোফাইল - DLS Tour BD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #060a10;
+    --grid: #0e1520;
+    --cyan: #22d3ee;
+    --magenta: #ec4899;
+    --violet: #8b5cf6;
+    --gold: #f5c451;
+    --green: #34d399;
+    --danger: #f43f5e;
+    --text: #f3f6fa;
+    --muted: #7b869a;
+    --card: rgba(13,18,28,0.82);
+    --card-border: rgba(255,255,255,0.08);
+    --field: rgba(255,255,255,0.04);
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  /* Chrome (especially Android) force-applies a white autofill background
+     to tel/number fields even with autocomplete="off". This overrides it. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 1000px rgba(255,255,255,0.04) inset !important;
+    -webkit-text-fill-color: #f3f6fa !important;
+    caret-color: #f3f6fa !important;
+    transition: background-color 9999s ease-in-out 0s;
+  }
+  html, body{ width:100%; min-height:100%; background: var(--bg); font-family:'Inter', sans-serif; color: var(--text); }
+  body{ position:relative; min-height:100vh; padding-bottom: 84px; }
+
+  .grid-field{
+    position:fixed; inset:0;
+    background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 42px 42px;
+    -webkit-mask-image: radial-gradient(circle at 50% 0%, black 5%, transparent 65%);
+            mask-image: radial-gradient(circle at 50% 0%, black 5%, transparent 65%);
+    z-index:0;
+  }
+
+  .page{ position:relative; z-index:1; max-width:480px; margin:0 auto; padding: 16px 16px 0; }
+
+  .topbar{ display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+  .back-btn{ width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; background: var(--card); border:1px solid var(--card-border); color: var(--text); cursor:pointer; flex-shrink:0; }
+  .back-btn svg{ width:19px; height:19px; }
+  .topbar-title{ flex:1; font-family:'Rajdhani', sans-serif; font-weight:700; font-size:19px; letter-spacing:0.3px; }
+
+  /* ---- profile header ---- */
+  .profile-card{
+    display:flex; flex-direction:column; align-items:center; text-align:center;
+    background: var(--card); border:1px solid var(--card-border); border-radius:20px;
+    padding: 26px 20px; margin-bottom:18px;
+  }
+  .avatar-big{
+    width:84px; height:84px; border-radius:50%;
+    background: linear-gradient(135deg, var(--cyan), var(--violet));
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Rajdhani', sans-serif; font-weight:700; font-size:34px; color:#fff;
+    box-shadow: 0 0 0 3px rgba(34,211,238,0.15);
+    margin-bottom:14px;
+  }
+  .profile-name{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:21px; }
+  .profile-phone{ font-size:13.5px; color: var(--muted); margin-top:4px; }
+
+  /* ---- section cards ---- */
+  .section{
+    background: var(--card); border:1px solid var(--card-border); border-radius:18px;
+    padding: 6px; margin-bottom:16px;
+  }
+  .section-title{
+    font-family:'Rajdhani', sans-serif; font-weight:700; font-size:13.5px; color: var(--muted);
+    letter-spacing:0.4px; padding: 10px 14px 4px;
+  }
+
+  .row-btn{
+    display:flex; align-items:center; gap:12px; width:100%;
+    padding: 13px 14px; border:none; background:none; color: var(--text);
+    font-family:'Inter', sans-serif; font-size:14.5px; text-align:left; cursor:pointer;
+    text-decoration:none;
+  }
+  .row-btn .ico{
+    width:38px; height:38px; border-radius:11px; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .row-btn .ico svg{ width:18px; height:18px; }
+  .row-btn .label{ flex:1; }
+  .row-btn .label .sub{ display:block; font-size:11.5px; color: var(--muted); margin-top:1px; }
+  .row-btn .chev{ width:16px; height:16px; color: var(--muted); flex-shrink:0; }
+
+  .row-btn.history .ico{ background: rgba(34,211,238,0.12); color: var(--cyan); }
+  .row-btn.telegram .ico{ background: rgba(34,158,255,0.14); color:#2ea6ff; }
+  .row-btn.whatsapp .ico{ background: rgba(52,211,153,0.14); color: var(--green); }
+  .row-btn.youtube .ico{ background: rgba(244,63,94,0.14); color: #ff4d4d; }
+  .row-btn.tiktok .ico{ background: rgba(255,255,255,0.1); color: #f3f6fa; }
+  .row-btn.logout .ico{ background: rgba(244,63,94,0.12); color: var(--danger); }
+  .row-btn.logout{ color: var(--danger); }
+
+  .divider{ height:1px; background: var(--card-border); margin: 0 14px; }
+
+  .accordion-head{ cursor:pointer; }
+  .accordion-chev{ transition: transform 0.2s ease; }
+  .accordion-head.open .accordion-chev{ transform: rotate(180deg); }
+  .accordion-body{ max-height:0; overflow:hidden; transition: max-height 0.3s ease; }
+  .accordion-body.open{ max-height: 2000px; }
+
+  .history-inner{ padding: 4px 14px 16px; }
+  .filter-row{ display:flex; gap:8px; margin-bottom:12px; overflow-x:auto; padding-bottom:2px; }
+  .filter-chip{
+    flex-shrink:0; padding:7px 13px; border-radius:20px; border:1px solid var(--card-border);
+    background: var(--field); color: var(--muted); font-size:12px; font-weight:600; cursor:pointer;
+    font-family:'Inter', sans-serif; white-space:nowrap;
+  }
+  .filter-chip.active{ background: linear-gradient(135deg, rgba(34,211,238,0.22), rgba(139,92,246,0.22)); border-color: rgba(34,211,238,0.4); color: var(--text); }
+
+  #txList{ display:flex; flex-direction:column; gap:9px; }
+  .tx-card{ display:flex; align-items:center; gap:11px; background: rgba(255,255,255,0.03); border:1px solid var(--card-border); border-radius:13px; padding:11px 12px; }
+  .tx-icon{ width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .tx-icon svg{ width:16px; height:16px; }
+  .tx-icon.credit{ background: rgba(52,211,153,0.14); color: var(--green); }
+  .tx-icon.debit{ background: rgba(244,63,94,0.12); color: var(--danger); }
+  .tx-info{ flex:1; min-width:0; }
+  .tx-info .tt{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:13.5px; }
+  .tx-info .tn{ font-size:11px; color: var(--muted); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .tx-info .td{ font-size:10px; color: var(--muted); margin-top:2px; }
+  .tx-amt{ font-family:'Inter', monospace; font-weight:600; font-size:13.5px; flex-shrink:0; }
+  .tx-amt.credit{ color: var(--green); }
+  .tx-amt.debit{ color: var(--danger); }
+  .history-empty{ text-align:center; padding: 24px 10px; color: var(--muted); font-size:13px; }
+
+  /* ---- balance transfer ---- */
+  .transfer-body{ padding: 10px 14px 16px; }
+  .current-bal{
+    background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(34,211,238,0.15));
+    border-radius:13px; padding:12px 14px; text-align:center; margin-bottom:14px;
+  }
+  .current-bal .cb-label{ font-size:11px; color: var(--muted); letter-spacing:0.3px; }
+  .current-bal .cb-amt{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:20px; margin-top:3px; }
+
+  .field-label{ display:block; font-size:12.5px; color: var(--muted); margin-bottom:6px; }
+  .field-group{ margin-bottom:12px; }
+  .field-input{
+    width:100%; background: var(--field); border:1px solid var(--card-border); border-radius:11px;
+    padding: 12px 13px; font-size:14px; color: var(--text); font-family:'Inter', sans-serif;
+  }
+  .field-input:focus{ outline:none; border-color: rgba(34,211,238,0.5); }
+  .field-input::placeholder{ color: rgba(123,134,154,0.7); }
+
+  .transfer-btn{
+    width:100%; padding:13px; border:none; border-radius:12px;
+    background: linear-gradient(135deg, var(--cyan), var(--violet)); color:#fff;
+    font-family:'Inter', sans-serif; font-weight:600; font-size:14.5px; cursor:pointer;
+  }
+  .transfer-btn:disabled{ opacity:0.55; cursor:not-allowed; }
+
+  /* ---- season pass ---- */
+  .pass-options{ display:flex; flex-direction:column; gap:10px; }
+  .pass-card{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:13px 14px; border-radius:13px; border:1px solid var(--card-border);
+    background: rgba(255,255,255,0.03);
+  }
+  .pass-card .pc-name{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:14px; }
+  .pass-card .pc-price{ font-family:'Inter', monospace; font-weight:600; color: var(--gold); font-size:14px; flex-shrink:0; }
+  .pass-note{ font-size:12.5px; color: var(--muted); line-height:1.7; margin:14px 0; }
+  .pass-whatsapp{ background: rgba(52,211,153,0.08); border:1px solid rgba(52,211,153,0.25); border-radius:13px; }
+
+  /* ---- toast ---- */
+  .toast-stack{ position:fixed; left:50%; bottom:26px; transform:translateX(-50%); z-index:80; display:flex; flex-direction:column; gap:10px; width:min(360px, 92vw); }
+  .toast{ display:flex; align-items:flex-start; gap:10px; background: rgba(15,20,30,0.94); border:1px solid rgba(255,255,255,0.08); border-left:3px solid var(--cyan); border-radius:12px; padding:13px 14px; font-size:13.5px; line-height:1.5; box-shadow:0 14px 30px rgba(0,0,0,0.4); animation: toastIn 0.28s ease; backdrop-filter: blur(10px); }
+  .toast.error{ border-left-color: var(--danger); }
+  .toast.success{ border-left-color: var(--green); }
+  .toast .icon svg{ width:16px; height:16px; }
+  .toast.error .icon{ color: var(--danger); }
+  .toast.success .icon{ color: var(--green); }
+  .toast.info .icon{ color: var(--cyan); }
+  @keyframes toastIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  .toast.out{ animation: toastOut 0.24s ease forwards; }
+  @keyframes toastOut{ to{opacity:0; transform:translateY(-6px);} }
+
+  /* ---- logout confirm modal ---- */
+  .modal-overlay{ position:fixed; inset:0; z-index:60; background: rgba(3,5,9,0.72); backdrop-filter: blur(6px); display:none; align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay.open{ display:flex; animation: overlayIn 0.2s ease; }
+  @keyframes overlayIn{ from{opacity:0;} to{opacity:1;} }
+  .modal-box{
+    width:100%; max-width:340px; background: linear-gradient(180deg, #0c1119, #080b11);
+    border:1px solid var(--card-border); border-radius:18px; padding:22px; text-align:center;
+  }
+  .modal-box .mt{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:17px; margin-bottom:8px; }
+  .modal-box .ms{ font-size:13px; color: var(--muted); margin-bottom:18px; line-height:1.6; }
+  .modal-actions{ display:flex; gap:10px; }
+  .modal-actions button{ flex:1; padding:11px; border-radius:11px; font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px; cursor:pointer; border:none; }
+  .modal-cancel{ background: var(--field); border:1px solid var(--card-border) !important; color: var(--text); }
+  .modal-confirm{ background: linear-gradient(135deg, var(--danger), #b91c3c); color:#fff; }
+
+  /* ---- bottom nav ---- */
+  .bottom-nav{ position:fixed; left:0; right:0; bottom:0; z-index:20; display:flex; background: rgba(9,13,20,0.94); border-top:1px solid rgba(255,255,255,0.06); backdrop-filter: blur(14px); padding:8px 6px 10px; }
+  .nav-item{ flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; background:none; border:none; color: var(--muted); font-family:'Inter', sans-serif; font-size:11px; font-weight:600; cursor:pointer; }
+  .nav-item svg{ width:21px; height:21px; }
+  .nav-item.active{ color: var(--cyan); }
+</style>
+</head>
+<body>
+
+<div class="grid-field"></div>
+
+<div class="page">
+  <div class="topbar">
+    <button class="back-btn" onclick="location.href='home.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <div class="topbar-title">প্রোফাইল</div>
+  </div>
+
+  <div class="profile-card">
+    <div class="avatar-big" id="avatarLetter">?</div>
+    <div class="profile-name" id="profileName">লোড হচ্ছে…</div>
+    <div class="profile-phone" id="profilePhone">—</div>
+  </div>
+
+  <div class="section">
+    <button class="row-btn accordion-head" onclick="toggleAccordion('seasonPassBody', this)">
+      <span class="ico" style="background: rgba(245,196,81,0.16); color: var(--gold);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9V7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v2a2 2 0 0 0 0 6v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-6Z"/><path d="M13 5v2m0 3v2m0 3v2"/></svg></span>
+      <span class="label">DLS এর সিজন পাস কিনুন<span class="sub">সিজন পাস অর্ডার করতে WhatsApp এ যোগাযোগ করুন</span></span>
+      <svg class="chev accordion-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="accordion-body" id="seasonPassBody">
+      <div class="divider"></div>
+      <div class="transfer-body">
+        <div class="field-group">
+          <label class="field-label">প্যাকেজ ও মূল্য</label>
+          <div class="pass-options">
+            <div class="pass-card">
+              <span class="pc-name">BASIC SEASON PASS</span>
+              <span class="pc-price">৳৩৮০</span>
+            </div>
+            <div class="pass-card">
+              <span class="pc-name">DISQUANT SEASON PASS</span>
+              <span class="pc-price">৳১৮০</span>
+            </div>
+            <div class="pass-card">
+              <span class="pc-name">PREMIUM SEASON PASS</span>
+              <span class="pc-price">৳১৯০০</span>
+            </div>
+          </div>
+        </div>
+        <div class="pass-note">
+          BASIC, DISQUANT বা PREMIUM — যেকোনো সিজন পাস অর্ডার করতে নিচের WhatsApp নম্বরে চাপ দিন, সরাসরি চ্যাট খুলে যাবে।
+        </div>
+        <a class="row-btn whatsapp pass-whatsapp" href="https://wa.me/8801859793158" target="_blank" rel="noopener">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.5 0-9.96 4.46-9.96 9.96 0 1.76.46 3.4 1.26 4.83L2 22l5.36-1.29a9.9 9.9 0 0 0 4.68 1.19h.01c5.5 0 9.96-4.46 9.96-9.96 0-2.66-1.04-5.16-2.92-7.04A9.9 9.9 0 0 0 12.04 2Zm5.8 14.24c-.24.68-1.4 1.3-1.93 1.34-.5.05-1.02.24-3.4-.7-2.87-1.14-4.7-4.07-4.85-4.26-.14-.2-1.15-1.53-1.15-2.92s.72-2.07.98-2.35c.25-.28.55-.35.74-.35h.53c.17 0 .4-.06.62.48.24.58.8 2 .87 2.15.07.15.12.32.02.51-.1.2-.15.32-.3.5-.15.17-.3.39-.44.52-.15.15-.3.3-.13.6.17.3.76 1.26 1.64 2.04 1.13 1 2.08 1.32 2.38 1.47.3.15.47.13.65-.08.17-.2.72-.84.92-1.13.2-.28.4-.24.66-.14.28.09 1.7.8 1.99.95.3.15.49.22.56.35.08.13.08.72-.16 1.4Z"/></svg></span>
+          <span class="label">WhatsApp এ যোগাযোগ করুন<span class="sub">01859793158</span></span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <button class="row-btn accordion-head" onclick="toggleAccordion('communityBody', this)">
+      <span class="ico" style="background: rgba(34,211,238,0.14); color: var(--cyan);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+      <span class="label">আমাদের গ্রুপ এবং কমিউনিটিতে যোগ দিন<span class="sub">Telegram, YouTube ও TikTok এ আমাদের ফলো করুন</span></span>
+      <svg class="chev accordion-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="accordion-body" id="communityBody">
+      <div class="divider"></div>
+      <a class="row-btn telegram" href="https://t.me/Goalfesttourbd" target="_blank" rel="noopener">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.94 4.6 18.6 20.2c-.25 1.1-.9 1.37-1.82.85l-5.03-3.71-2.43 2.34c-.27.27-.5.5-1.02.5l.36-5.16 9.4-8.5c.41-.36-.09-.56-.63-.2L6.4 12.3l-4.98-1.56c-1.08-.34-1.1-1.08.23-1.6L20.6 3.03c.9-.33 1.69.2 1.34 1.57z"/></svg></span>
+        <span class="label">টেলিগ্রাম চ্যানেল<span class="sub">@Goalfesttourbd</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+      <div class="divider"></div>
+      <a class="row-btn youtube" href="https://youtube.com/@soccergamingbd?si=CXIFn6lPy-ufGTJg" target="_blank" rel="noopener">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33Z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" fill="#060a10"/></svg></span>
+        <span class="label">ইউটিউব চ্যানেল<span class="sub">@soccergamingbd</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+      <div class="divider"></div>
+      <a class="row-btn tiktok" href="https://www.tiktok.com/@soccer_gaming_bd?_r=1&amp;_t=ZS-9BceQlZyXVV" target="_blank" rel="noopener">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48Z"/></svg></span>
+        <span class="label">টিকটক আইডি<span class="sub">@soccer_gaming_bd</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <div class="section">
+    <button class="row-btn accordion-head history" onclick="toggleHistory(this)">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg></span>
+      <span class="label">ট্রানজেকশন হিস্টরি<span class="sub">আপনার সব লেনদেন দেখুন</span></span>
+      <svg class="chev accordion-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="accordion-body" id="historyBody">
+      <div class="divider"></div>
+      <div class="history-inner">
+        <div class="filter-row" id="filterRow">
+          <button class="filter-chip active" data-filter="all" onclick="setHistoryFilter('all', this)">সব</button>
+          <button class="filter-chip" data-filter="deposit" onclick="setHistoryFilter('deposit', this)">অ্যাড মানি</button>
+          <button class="filter-chip" data-filter="withdraw" onclick="setHistoryFilter('withdraw', this)">উইথড্র</button>
+          <button class="filter-chip" data-filter="transfer" onclick="setHistoryFilter('transfer', this)">ট্রান্সফার</button>
+        </div>
+        <div id="txList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <button class="row-btn accordion-head" onclick="toggleAccordion('contactBody', this)">
+      <span class="ico" style="background: rgba(52,211,153,0.14); color: var(--green);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+      <span class="label">ডেভেলপার কন্টাক্ট<span class="sub">এরকম অ্যাপ/সাইট বানাতে চান? যোগাযোগ করুন</span></span>
+      <svg class="chev accordion-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="accordion-body" id="contactBody">
+      <div class="divider"></div>
+      <a class="row-btn telegram" href="https://t.me/+8801804888814" target="_blank" rel="noopener">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.94 4.6 18.6 20.2c-.25 1.1-.9 1.37-1.82.85l-5.03-3.71-2.43 2.34c-.27.27-.5.5-1.02.5l.36-5.16 9.4-8.5c.41-.36-.09-.56-.63-.2L6.4 12.3l-4.98-1.56c-1.08-.34-1.1-1.08.23-1.6L20.6 3.03c.9-.33 1.69.2 1.34 1.57z"/></svg></span>
+        <span class="label">Telegram সাপোর্ট<span class="sub">01804888814</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+      <div class="divider"></div>
+      <a class="row-btn whatsapp" href="https://wa.me/8801804888814" target="_blank" rel="noopener">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.5 0-9.96 4.46-9.96 9.96 0 1.76.46 3.4 1.26 4.83L2 22l5.36-1.29a9.9 9.9 0 0 0 4.68 1.19h.01c5.5 0 9.96-4.46 9.96-9.96 0-2.66-1.04-5.16-2.92-7.04A9.9 9.9 0 0 0 12.04 2Zm5.8 14.24c-.24.68-1.4 1.3-1.93 1.34-.5.05-1.02.24-3.4-.7-2.87-1.14-4.7-4.07-4.85-4.26-.14-.2-1.15-1.53-1.15-2.92s.72-2.07.98-2.35c.25-.28.55-.35.74-.35h.53c.17 0 .4-.06.62.48.24.58.8 2 .87 2.15.07.15.12.32.02.51-.1.2-.15.32-.3.5-.15.17-.3.39-.44.52-.15.15-.3.3-.13.6.17.3.76 1.26 1.64 2.04 1.13 1 2.08 1.32 2.38 1.47.3.15.47.13.65-.08.17-.2.72-.84.92-1.13.2-.28.4-.24.66-.14.28.09 1.7.8 1.99.95.3.15.49.22.56.35.08.13.08.72-.16 1.4Z"/></svg></span>
+        <span class="label">WhatsApp সাপোর্ট<span class="sub">01804888814</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <div class="section">
+    <button class="row-btn accordion-head" onclick="toggleAccordion('transferBody', this)">
+      <span class="ico" style="background: rgba(139,92,246,0.16); color: var(--violet);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="1" x2="17" y2="23"/><line x1="7" y1="1" x2="7" y2="23"/><line x1="1" y1="7" x2="23" y2="7"/><line x1="1" y1="17" x2="23" y2="17"/></svg></span>
+      <span class="label">ব্যালেন্স ট্রান্সফার<span class="sub">অন্য ইউজারকে টাকা পাঠান</span></span>
+      <svg class="chev accordion-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="accordion-body" id="transferBody">
+      <div class="divider"></div>
+      <div class="transfer-body">
+        <div class="current-bal">
+          <div class="cb-label">আপনার ডিপোজিট ব্যালেন্স</div>
+          <div class="cb-amt" id="transferBalanceShown">৳০</div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">প্রাপকের মোবাইল নম্বর</label>
+          <input type="tel" class="field-input" id="transferPhone" placeholder="01XXXXXXXXX" maxlength="11" inputmode="numeric">
+        </div>
+        <div class="field-group">
+          <label class="field-label">পরিমাণ (৳)</label>
+          <input type="number" class="field-input" id="transferAmount" placeholder="যেমন: ৫০" inputmode="numeric">
+        </div>
+
+        <button class="transfer-btn" id="transferBtn" onclick="handleTransfer()">টাকা পাঠান</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <button class="row-btn logout" onclick="showLogoutConfirm()">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
+      <span class="label">লগ আউট</span>
+    </button>
+  </div>
+</div>
+
+<!-- logout confirm modal -->
+<div class="modal-overlay" id="logoutModal">
+  <div class="modal-box">
+    <div class="mt">লগ আউট করবেন?</div>
+    <div class="ms">লগ আউট করলে আবার লগইন করতে ফোন নম্বর ও পাসওয়ার্ড দিতে হবে।</div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="hideLogoutConfirm()">বাতিল</button>
+      <button class="modal-confirm" onclick="confirmLogout()">লগ আউট</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<!-- bottom nav -->
+<div class="bottom-nav">
+  <button class="nav-item" onclick="location.href='home.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18 4.5 4.5 0 0 0 0-9 4.5 4.5 0 0 1 0-9Z"/></svg>
+    ম্যাচ
+  </button>
+  <button class="nav-item" onclick="location.href='history.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+    হিস্টোরি
+  </button>
+  <button class="nav-item" onclick="location.href='wallet.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5h-4a2 2 0 0 1 0-4h4Z"/></svg>
+    ওয়ালেট
+  </button>
+  <button class="nav-item active" onclick="location.href='profile.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    প্রোফাইল
+  </button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMt3Ra3GMGS4uwn6-LGHwOw4XuFIcR-aE",
+    authDomain: "dls-tournament-bd-d8f0a.firebaseapp.com",
+    databaseURL: "https://dls-tournament-bd-d8f0a-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "dls-tournament-bd-d8f0a",
+    storageBucket: "dls-tournament-bd-d8f0a.firebasestorage.app",
+    messagingSenderId: "705815077213",
+    appId: "1:705815077213:web:6e6df3452b17147a3648b4"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  const sessionPhone = localStorage.getItem('gf_session_phone');
+  if (!sessionPhone){ window.location.href = 'auth.html'; }
+
+  const bnDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+  function toBn(num){ return String(num).replace(/[0-9]/g, d => bnDigits[d]); }
+  function isValidPhone(phone){ return /^01[3-9][0-9]{8}$/.test(phone); }
+
+  function showToast(message, type='info', duration=3400){
+    const stack = document.getElementById('toastStack');
+    const icons = {
+      success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+      error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+      info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+    };
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span class="icon">${icons[type]}</span><span>${message}</span>`;
+    stack.appendChild(toast);
+    setTimeout(() => { toast.classList.add('out'); setTimeout(() => toast.remove(), 240); }, duration);
+  }
+
+  // ---- transaction history logging ----
+  async function logTransaction(phone, type, amount, note){
+    try{
+      const ref = db.ref('transactions/' + phone).push();
+      await ref.set({
+        type: type,
+        amount: amount,
+        note: note || '',
+        createdAt: firebase.database.ServerValue.TIMESTAMP
+      });
+    } catch(err){ console.error(err); }
+  }
+
+  // ---- accordions ----
+  function toggleAccordion(bodyId, headBtn){
+    const body = document.getElementById(bodyId);
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    headBtn.classList.toggle('open', !isOpen);
+  }
+
+  // ---- transaction history (inline accordion) ----
+  const typeMeta = {
+    deposit:           { label: 'ব্যালেন্স যোগ',        sign: '+', dir: 'credit', group: 'deposit',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5h-4a2 2 0 0 1 0-4h4Z"/></svg>' },
+    withdraw:          { label: 'উইথড্র',                sign: '-', dir: 'debit', group: 'withdraw',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>' },
+    transfer_sent:     { label: 'ব্যালেন্স পাঠানো হয়েছে', sign: '-', dir: 'debit', group: 'transfer',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="1" x2="17" y2="23"/><line x1="7" y1="1" x2="7" y2="23"/><path d="M15 8l4 4-4 4"/></svg>' },
+    transfer_received: { label: 'ব্যালেন্স পাওয়া হয়েছে', sign: '+', dir: 'credit', group: 'transfer',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="1" x2="17" y2="23"/><line x1="7" y1="1" x2="7" y2="23"/><path d="M9 8l-4 4 4 4"/></svg>' },
+    match_entry:       { label: 'ম্যাচ এন্ট্রি ফি',       sign: '-', dir: 'debit', group: 'withdraw',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/></svg>' }
+  };
+
+  function formatDateTime(ts){
+    if (!ts) return '';
+    const d = new Date(ts);
+    const day = String(d.getDate()).padStart(2,'0');
+    const month = String(d.getMonth()+1).padStart(2,'0');
+    const year = d.getFullYear();
+    let hours = d.getHours();
+    const mins = String(d.getMinutes()).padStart(2,'0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    return `${day}/${month}/${year} · ${hours}:${mins} ${ampm}`;
+  }
+
+  let allTx = [];
+  let currentHistoryFilter = 'all';
+  let historyLoaded = false;
+
+  async function toggleHistory(headBtn){
+    toggleAccordion('historyBody', headBtn);
+    if (!historyLoaded){
+      historyLoaded = true;
+      await loadHistory();
+    }
+  }
+
+  async function loadHistory(){
+    const container = document.getElementById('txList');
+    container.innerHTML = `<div class="history-empty">লোড হচ্ছে…</div>`;
+    try{
+      const snap = await db.ref('transactions/' + sessionPhone).get();
+      if (!snap.exists()){
+        allTx = [];
+        renderHistoryList();
+        return;
+      }
+      const data = snap.val();
+      allTx = Object.keys(data).map(key => ({ id: key, ...data[key] }))
+        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      renderHistoryList();
+    } catch(err){
+      console.error(err);
+      container.innerHTML = `<div class="history-empty">হিস্টরি লোড করা যায়নি।</div>`;
+    }
+  }
+
+  function setHistoryFilter(filter, btn){
+    currentHistoryFilter = filter;
+    document.querySelectorAll('#filterRow .filter-chip').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    renderHistoryList();
+  }
+
+  function renderHistoryList(){
+    const container = document.getElementById('txList');
+    const filtered = currentHistoryFilter === 'all'
+      ? allTx
+      : allTx.filter(tx => (typeMeta[tx.type] || {}).group === currentHistoryFilter);
+
+    if (filtered.length === 0){
+      container.innerHTML = `<div class="history-empty">এখনো কোনো লেনদেন নেই।</div>`;
+      return;
+    }
+
+    container.innerHTML = filtered.map(tx => {
+      const meta = typeMeta[tx.type] || { label: tx.type, sign: '', dir: 'credit', icon: '' };
+      return `
+        <div class="tx-card">
+          <div class="tx-icon ${meta.dir}">${meta.icon}</div>
+          <div class="tx-info">
+            <div class="tt">${meta.label}</div>
+            ${tx.note ? `<div class="tn">${tx.note}</div>` : ''}
+            <div class="td">${formatDateTime(tx.createdAt)}</div>
+          </div>
+          <div class="tx-amt ${meta.dir}">${meta.sign}৳${toBn(tx.amount)}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ---- self-heal old accounts missing balance fields ----
+  async function ensureBalanceFields(){
+    try{
+      const snap = await db.ref('users/' + sessionPhone).get();
+      if (!snap.exists()) return;
+      const u = snap.val();
+      if (u.depositBalance === undefined){
+        await db.ref('users/' + sessionPhone + '/depositBalance').set(0).catch(() => {});
+      }
+      if (u.winningBalance === undefined){
+        await db.ref('users/' + sessionPhone + '/winningBalance').set(0).catch(() => {});
+      }
+    } catch(err){ console.error(err); }
+  }
+
+  // ---- load profile ----
+  async function loadProfile(){
+    await ensureBalanceFields();
+    try{
+      const snap = await db.ref('users/' + sessionPhone).get();
+      if (!snap.exists()){
+        localStorage.removeItem('gf_session_phone');
+        window.location.href = 'auth.html';
+        return;
+      }
+      const u = snap.val();
+      const name = u.name || 'খেলোয়াড়';
+      document.getElementById('profileName').textContent = name;
+      document.getElementById('profilePhone').textContent = sessionPhone;
+      document.getElementById('avatarLetter').textContent = name.trim().charAt(0).toUpperCase();
+      document.getElementById('transferBalanceShown').textContent = '৳' + toBn(u.depositBalance || 0);
+    } catch(err){ console.error(err); }
+  }
+  loadProfile();
+
+  // ---- balance transfer ----
+  async function handleTransfer(){
+    const recipientPhone = document.getElementById('transferPhone').value.trim();
+    const amount = Number(document.getElementById('transferAmount').value);
+    const btn = document.getElementById('transferBtn');
+
+    if (!isValidPhone(recipientPhone)){ showToast('সঠিক ফরম্যাটে মোবাইল নম্বর দিন।', 'error'); return; }
+    if (recipientPhone === sessionPhone){ showToast('নিজের নম্বরে টাকা পাঠানো যাবে না।', 'error'); return; }
+    if (!amount || amount <= 0){ showToast('সঠিক পরিমাণ টাকা লিখুন।', 'error'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'পাঠানো হচ্ছে…';
+
+    try{
+      const recipientSnap = await db.ref('users/' + recipientPhone).get();
+      if (!recipientSnap.exists()){
+        showToast('এই নম্বরে কোনো একাউন্ট পাওয়া যায়নি।', 'error');
+        return;
+      }
+
+      const senderSnap = await db.ref('users/' + sessionPhone + '/depositBalance').get();
+      const senderBalance = Number(senderSnap.val()) || 0;
+      if (senderBalance < amount){
+        showToast('পর্যাপ্ত ডিপোজিট ব্যালেন্স নেই।', 'error');
+        return;
+      }
+
+      // We already confirmed sufficient balance above, so this just needs
+      // to subtract safely — it must never return undefined on a null/
+      // uncached first pass (Firebase treats that as "abort the whole
+      // transaction", not "retry"), or it can wrongly cancel a perfectly
+      // valid transfer on a slow connection.
+      const deductResult = await db.ref('users/' + sessionPhone + '/depositBalance')
+        .transaction(cur => Math.max(0, (Number(cur) || 0) - amount));
+
+      if (!deductResult.committed){
+        showToast('টাকা পাঠানো যায়নি। আবার চেষ্টা করুন।', 'error');
+        return;
+      }
+
+      const creditResult = await db.ref('users/' + recipientPhone + '/depositBalance')
+        .transaction(cur => (Number(cur) || 0) + amount);
+
+      if (!creditResult.committed){
+        // credit failed — refund the sender so money isn't lost in transit
+        await db.ref('users/' + sessionPhone + '/depositBalance').transaction(cur => (Number(cur) || 0) + amount);
+        showToast('টাকা পাঠানো যায়নি, ব্যালেন্স ফেরত দেওয়া হয়েছে। আবার চেষ্টা করুন।', 'error');
+        return;
+      }
+
+      await logTransaction(sessionPhone, 'transfer_sent', amount, `প্রাপক: ${recipientPhone}`);
+      await logTransaction(recipientPhone, 'transfer_received', amount, `প্রেরক: ${sessionPhone}`);
+
+      showToast(`৳${toBn(amount)} ${recipientPhone} নম্বরে সফলভাবে পাঠানো হয়েছে।`, 'success');
+      document.getElementById('transferPhone').value = '';
+      document.getElementById('transferAmount').value = '';
+      loadProfile();
+      if (historyLoaded) loadHistory();
+    } catch(err){
+      console.error(err);
+      showToast('টাকা পাঠানো যায়নি। আবার চেষ্টা করুন।', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'টাকা পাঠান';
+    }
+  }
+
+  // ---- logout ----
+  function showLogoutConfirm(){ document.getElementById('logoutModal').classList.add('open'); }
+  function hideLogoutConfirm(){ document.getElementById('logoutModal').classList.remove('open'); }
+  function confirmLogout(){
+    localStorage.removeItem('gf_session_phone');
+    localStorage.removeItem('gf_session_name');
+    window.location.href = 'auth.html';
+  }
+</script>
+
+</body>
+</html>

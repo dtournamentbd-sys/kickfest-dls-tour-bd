@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>DLS 1V1 Match - DLS Tour BD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #060a10;
+    --grid: #0e1520;
+    --cyan: #22d3ee;
+    --magenta: #ec4899;
+    --violet: #8b5cf6;
+    --gold: #f5c451;
+    --green: #34d399;
+    --danger: #f43f5e;
+    --text: #f3f6fa;
+    --muted: #7b869a;
+    --card: rgba(13,18,28,0.82);
+    --card-border: rgba(255,255,255,0.08);
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  /* Chrome (especially Android) force-applies a white autofill background
+     to tel/number fields even with autocomplete="off". This overrides it. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 1000px rgba(255,255,255,0.04) inset !important;
+    -webkit-text-fill-color: #f3f6fa !important;
+    caret-color: #f3f6fa !important;
+    transition: background-color 9999s ease-in-out 0s;
+  }
+  html, body{ width:100%; min-height:100%; background: var(--bg); font-family:'Inter', sans-serif; color: var(--text); }
+  body{ position:relative; min-height:100vh; padding-bottom: 84px; }
+
+  .grid-field{
+    position:fixed; inset:0;
+    background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 42px 42px;
+    -webkit-mask-image: radial-gradient(circle at 50% 0%, black 5%, transparent 65%);
+            mask-image: radial-gradient(circle at 50% 0%, black 5%, transparent 65%);
+    z-index:0;
+  }
+
+  .page{ position:relative; z-index:1; max-width:480px; margin:0 auto; padding: 16px 16px 0; }
+
+  /* ---- top bar ---- */
+  .topbar{ display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+  .back-btn{
+    width:40px; height:40px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    background: var(--card); border:1px solid var(--card-border);
+    color: var(--text); cursor:pointer; flex-shrink:0;
+  }
+  .back-btn svg{ width:19px; height:19px; }
+  .topbar-title{ flex:1; }
+  .topbar-title .t1{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:19px; letter-spacing:0.3px; }
+  .topbar-title .t2{ font-size:12px; color: var(--muted); }
+  .topbar-balance{ display:flex; gap:6px; flex-shrink:0; }
+  .mini-pill{ font-size:11.5px; font-weight:600; padding:5px 9px; border-radius:9px; }
+  .mini-pill.win{ background: rgba(52,211,153,0.1); border:1px solid rgba(52,211,153,0.35); color: var(--green); }
+  .mini-pill.dep{ background: rgba(34,211,238,0.08); border:1px solid rgba(34,211,238,0.3); color: var(--cyan); }
+
+  /* ---- match cards ---- */
+  #matchList{ display:flex; flex-direction:column; gap:16px; }
+
+  .match-card-wrap{
+    position:relative;
+    border-radius: 20px;
+    padding: 1.5px;
+    background: linear-gradient(135deg, rgba(34,211,238,0.55), rgba(139,92,246,0.5), rgba(236,72,153,0.45));
+  }
+  .match-card{
+    position:relative;
+    background: linear-gradient(160deg, rgba(13,18,28,0.96), rgba(9,13,20,0.98));
+    border-radius: 19px;
+    padding: 18px 18px 16px;
+    overflow:hidden;
+  }
+  .match-card::before{
+    content:"";
+    position:absolute; top:-40px; right:-40px;
+    width:140px; height:140px;
+    background: radial-gradient(circle, rgba(34,211,238,0.16), transparent 70%);
+    pointer-events:none;
+  }
+
+  .match-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:14px; }
+  .match-name{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:18px; letter-spacing:0.3px; }
+  .match-sub{ font-size:11.5px; color: var(--muted); margin-top:2px; }
+
+  .countdown-badge{
+    flex-shrink:0;
+    display:flex; flex-direction:column; align-items:center;
+    background: rgba(244,63,94,0.1);
+    border: 1px solid rgba(244,63,94,0.4);
+    border-radius: 11px;
+    padding: 6px 10px;
+  }
+  .countdown-badge .cb-label{ font-size:9.5px; color: var(--danger); letter-spacing:0.4px; font-weight:700; }
+  .countdown-badge .cb-time{ font-family:'JetBrains Mono', monospace; font-size:13.5px; font-weight:600; color: var(--text); }
+
+  .match-stats{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:14px; }
+  .stat-box{ background: rgba(255,255,255,0.03); border:1px solid var(--card-border); border-radius:12px; padding:9px 12px; }
+  .stat-box .s-label{ font-size:10.5px; color: var(--muted); letter-spacing:0.3px; }
+  .stat-box .s-value{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:16px; margin-top:2px; }
+  .stat-box.prize .s-value{ color: var(--gold); }
+  .stat-box.fee .s-value{ color: var(--cyan); }
+
+  .slots-row{ margin-bottom:14px; }
+  .slots-top{ display:flex; justify-content:space-between; font-size:11.5px; color: var(--muted); margin-bottom:6px; }
+  .slots-bar{ height:6px; border-radius:4px; background: rgba(255,255,255,0.06); overflow:hidden; }
+  .slots-fill{ height:100%; background: linear-gradient(90deg, var(--cyan), var(--violet)); border-radius:4px; transition: width 0.3s ease; }
+
+  .join-btn{
+    width:100%;
+    padding: 12px;
+    border:none; border-radius: 12px;
+    font-family:'Inter', sans-serif; font-weight:600; font-size:14px;
+    cursor:pointer;
+    background: linear-gradient(135deg, var(--cyan), var(--violet));
+    color:#fff;
+  }
+  .join-btn.joined{ background: linear-gradient(135deg, rgba(52,211,153,0.25), rgba(52,211,153,0.15)); border:1px solid rgba(52,211,153,0.5); color: var(--green); }
+  .join-btn.full{ background: rgba(255,255,255,0.05); border:1px solid var(--card-border); color: var(--muted); cursor:not-allowed; }
+
+  .empty-state{ text-align:center; padding: 60px 20px; color: var(--muted); font-size:14px; line-height:1.7; }
+  .empty-state .big{ font-size:40px; margin-bottom:12px; }
+
+  /* ---- modal ---- */
+  .modal-overlay{
+    position:fixed; inset:0; z-index:60;
+    background: rgba(3,5,9,0.72);
+    backdrop-filter: blur(6px);
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+  }
+  .modal-overlay.open{ display:flex; animation: overlayIn 0.2s ease; }
+  @keyframes overlayIn{ from{opacity:0;} to{opacity:1;} }
+
+  .modal-sheet{
+    width:100%; max-width:480px;
+    max-height: 88vh;
+    overflow-y:auto;
+    background: linear-gradient(180deg, #0c1119, #080b11);
+    border-radius: 22px 22px 0 0;
+    border-top: 1px solid rgba(34,211,238,0.25);
+    padding: 20px 20px 26px;
+    animation: sheetIn 0.28s cubic-bezier(.2,.9,.3,1.1);
+  }
+  @keyframes sheetIn{ from{ transform: translateY(24px); opacity:0.4; } to{ transform: translateY(0); opacity:1; } }
+
+  .modal-handle{ width:38px; height:4px; border-radius:3px; background: rgba(255,255,255,0.15); margin:0 auto 16px; }
+
+  .modal-title{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:19px; margin-bottom:4px; }
+  .modal-sub{ font-size:12.5px; color: var(--muted); margin-bottom:18px; }
+
+  .field-group{ margin-bottom:14px; }
+  .field-label{ display:block; font-size:12.5px; color: var(--muted); margin-bottom:6px; }
+  .field-input{
+    background: rgba(255,255,255,0.04); border:1px solid var(--card-border); border-radius:11px;
+    padding: 12px 13px; font-size:14px; color:var(--text); width:100%; font-family:'Inter', sans-serif;
+  }
+  .field-input:focus{ outline:none; border-color: rgba(34,211,238,0.5); }
+  .field-input::placeholder{ color: rgba(123,134,154,0.7); }
+
+  .rules-box{
+    background: rgba(245,196,81,0.05);
+    border: 1px solid rgba(245,196,81,0.3);
+    border-radius: 14px;
+    padding: 14px 15px;
+    margin: 16px 0 18px;
+  }
+  .rules-box .rt{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:14.5px; color: var(--gold); margin-bottom:9px; display:flex; align-items:center; gap:6px; }
+  .rules-box ol{ padding-left:18px; display:flex; flex-direction:column; gap:7px; }
+  .rules-box li{ font-size:12.5px; line-height:1.55; color: var(--text); }
+
+  .modal-submit{
+    width:100%; padding:14px; border:none; border-radius:13px;
+    background: linear-gradient(135deg, var(--cyan), var(--violet)); color:#fff;
+    font-family:'Inter', sans-serif; font-weight:600; font-size:15px; cursor:pointer;
+  }
+  .modal-submit:disabled{ opacity:0.55; cursor:not-allowed; }
+
+  /* joined view */
+  .joined-icon{ width:58px; height:58px; border-radius:50%; background: rgba(52,211,153,0.12); border:1px solid rgba(52,211,153,0.4); display:flex; align-items:center; justify-content:center; margin: 4px auto 14px; }
+  .joined-icon svg{ width:26px; height:26px; color: var(--green); }
+  .joined-msg{ text-align:center; font-size:13.5px; color: var(--text); line-height:1.7; margin-bottom:18px; }
+
+  .countdown-large{ text-align:center; margin-bottom:18px; }
+  .countdown-large .cl-label{ font-size:11.5px; color: var(--muted); letter-spacing:0.4px; margin-bottom:6px; }
+  .countdown-large .cl-time{ font-family:'JetBrains Mono', monospace; font-size:26px; font-weight:600; color: var(--cyan); }
+
+  .code-box{
+    background: rgba(34,211,238,0.06); border:1px dashed rgba(34,211,238,0.4); border-radius:14px;
+    padding: 16px; text-align:center; display:flex; align-items:center; justify-content:center; gap:12px;
+  }
+  .code-box .code-text{ font-family:'JetBrains Mono', monospace; font-size:20px; font-weight:600; letter-spacing:2px; color: var(--text); }
+  .copy-btn{
+    width:38px; height:38px; border-radius:10px; border:1px solid rgba(34,211,238,0.4);
+    background: rgba(34,211,238,0.1); color: var(--cyan); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+  }
+  .copy-btn svg{ width:17px; height:17px; }
+
+  .waiting-box{
+    background: rgba(255,255,255,0.03); border:1px solid var(--card-border); border-radius:14px;
+    padding:16px; text-align:center; font-size:12.5px; color: var(--muted); line-height:1.6;
+  }
+
+  /* ---- joined panel (shown directly on the card, no modal needed) ---- */
+  .joined-panel{
+    background: rgba(52,211,153,0.06); border:1px solid rgba(52,211,153,0.35); border-radius:14px;
+    padding:14px; text-align:center;
+  }
+  .joined-panel .jp-status{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:14px; color: var(--green); margin-bottom:8px; }
+  .joined-panel .jp-waiting{ font-size:12px; color: var(--muted); line-height:1.6; }
+  .joined-panel .jp-code-box{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    background: rgba(34,211,238,0.08); border:1px dashed rgba(34,211,238,0.45); border-radius:12px; padding:12px;
+  }
+  .joined-panel .jp-code-text{ font-family:'JetBrains Mono', monospace; font-size:18px; font-weight:600; letter-spacing:2px; color: var(--text); }
+  .joined-panel .jp-copy-btn{
+    width:34px; height:34px; border-radius:9px; border:1px solid rgba(34,211,238,0.4);
+    background: rgba(34,211,238,0.1); color: var(--cyan); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+  }
+  .joined-panel .jp-copy-btn svg{ width:16px; height:16px; }
+
+  /* ---- toast ---- */
+  .toast-stack{ position:fixed; left:50%; bottom:26px; transform:translateX(-50%); z-index:80; display:flex; flex-direction:column; gap:10px; width:min(360px, 92vw); }
+  .toast{ display:flex; align-items:flex-start; gap:10px; background: rgba(15,20,30,0.94); border:1px solid rgba(255,255,255,0.08); border-left:3px solid var(--cyan); border-radius:12px; padding:13px 14px; font-size:13.5px; line-height:1.5; box-shadow:0 14px 30px rgba(0,0,0,0.4); animation: toastIn 0.28s ease; backdrop-filter: blur(10px); }
+  .toast.error{ border-left-color: var(--danger); }
+  .toast.success{ border-left-color: var(--green); }
+  .toast .icon svg{ width:16px; height:16px; }
+  .toast.error .icon{ color: var(--danger); }
+  .toast.success .icon{ color: var(--green); }
+  .toast.info .icon{ color: var(--cyan); }
+  @keyframes toastIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  .toast.out{ animation: toastOut 0.24s ease forwards; }
+  @keyframes toastOut{ to{opacity:0; transform:translateY(-6px);} }
+
+  /* ---- bottom nav (same as home.html) ---- */
+  .bottom-nav{ position:fixed; left:0; right:0; bottom:0; z-index:20; display:flex; background: rgba(9,13,20,0.94); border-top:1px solid rgba(255,255,255,0.06); backdrop-filter: blur(14px); padding:8px 6px 10px; }
+  .nav-item{ flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; background:none; border:none; color: var(--muted); font-family:'Inter', sans-serif; font-size:11px; font-weight:600; cursor:pointer; }
+  .nav-item svg{ width:21px; height:21px; }
+  .nav-item.active{ color: var(--cyan); }
+</style>
+</head>
+<body>
+
+<div class="grid-field"></div>
+
+<div class="page">
+  <div class="topbar">
+    <button class="back-btn" onclick="location.href='home.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <div class="topbar-title">
+      <div class="t1">DLS 1V1 MATCH</div>
+      <div class="t2">১ ভি ১ ম্যাচে অংশ নিন</div>
+    </div>
+    <div class="topbar-balance">
+      <span class="mini-pill win" id="miniWin">W ৳০</span>
+      <span class="mini-pill dep" id="miniDep">D ৳০</span>
+    </div>
+  </div>
+
+  <div id="matchList"></div>
+</div>
+
+<!-- join / joined modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+
+    <!-- join form view -->
+    <div id="viewJoinForm">
+      <div class="modal-title" id="joinMatchName">ম্যাচের নাম</div>
+      <div class="modal-sub">জয়েন করতে নিচের তথ্যগুলো দিন</div>
+
+      <div class="field-group">
+        <label class="field-label">টিম ম্যানেজারের নাম</label>
+        <input type="text" class="field-input" id="teamManagerInput" placeholder="আপনার টিম ম্যানেজারের নাম লিখুন">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">টিম রেটিং</label>
+        <input type="number" class="field-input" id="teamRatingInput" placeholder="যেমন: ৯১" min="1" max="99" inputmode="numeric">
+      </div>
+
+      <div class="rules-box">
+        <div class="rt">⚠️ নিয়মাবলী</div>
+        <ol>
+          <li>ম্যাচ শেষে অবশ্যই স্ক্রিনশট নিয়ে সাপোর্টে যোগাযোগ করুন।</li>
+          <li>কোনো নির্দিষ্ট নিয়ম নেই — যেকোনো কৌশলে খেলতে পারবেন।</li>
+          <li>ম্যাচ শুরুর ৫ মিনিট আগে কোড দেওয়া হবে।</li>
+          <li>কোড ৫ মিনিট আগে পেলেও, ম্যাচ অবশ্যই নির্ধারিত সময়েই শুরু করতে হবে।</li>
+          <li>ম্যাচের নির্ধারিত সময় থেকে ৫ মিনিটের মধ্যে জয়েন না করলে প্রতিপক্ষকে জয়ী ধরা হবে।</li>
+          <li>কোড পাওয়ার মুহূর্ত থেকে ম্যাচে জয়েন করা পর্যন্ত পুরো সময় স্ক্রিন রেকর্ড করতে হবে, এবং রেকর্ডিংয়ে অন্তত একবার ফোনের সময় দেখাতে হবে।</li>
+          <li>নেটওয়ার্ক সমস্যার কারণে ম্যাচ থেকে বের হয়ে গেলে কোনো রিফান্ড দেওয়া হবে না — প্রতিপক্ষকে জয়ী ধরা হবে।</li>
+          <li>যেকোনো সমস্যায় কাস্টমার কেয়ারে যোগাযোগ করুন।</li>
+        </ol>
+      </div>
+
+      <button class="modal-submit" id="joinNowBtn" onclick="handleJoinSubmit()">Join Now</button>
+    </div>
+
+    <!-- joined confirmation view -->
+    <div id="viewJoined" style="display:none;">
+      <div class="joined-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <div class="joined-msg" id="joinedMatchName">আপনি এই ম্যাচে জয়েন করেছেন। ম্যাচ শুরুর ৫ মিনিট আগে কোড পাবেন।</div>
+
+      <div class="countdown-large">
+        <div class="cl-label">ম্যাচ শুরু হতে বাকি</div>
+        <div class="cl-time countdown" id="modalCountdown" data-start="0">--:--:--</div>
+      </div>
+
+      <div id="waitingBox" class="waiting-box">
+        কোড এখনো দেওয়া হয়নি — অ্যাডমিন কোড দিলে এখানেই দেখতে পাবেন।
+      </div>
+
+      <div id="codeBox" class="code-box" style="display:none;">
+        <span class="code-text" id="codeText"></span>
+        <button class="copy-btn" onclick="copyCode()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<!-- bottom nav -->
+<div class="bottom-nav">
+  <button class="nav-item active" onclick="location.href='home.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18 4.5 4.5 0 0 0 0-9 4.5 4.5 0 0 1 0-9Z"/></svg>
+    ম্যাচ
+  </button>
+  <button class="nav-item" onclick="location.href='history.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+    হিস্টোরি
+  </button>
+  <button class="nav-item" onclick="location.href='wallet.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5h-4a2 2 0 0 1 0-4h4Z"/></svg>
+    ওয়ালেট
+  </button>
+  <button class="nav-item" onclick="location.href='profile.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    প্রোফাইল
+  </button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMt3Ra3GMGS4uwn6-LGHwOw4XuFIcR-aE",
+    authDomain: "dls-tournament-bd-d8f0a.firebaseapp.com",
+    databaseURL: "https://dls-tournament-bd-d8f0a-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "dls-tournament-bd-d8f0a",
+    storageBucket: "dls-tournament-bd-d8f0a.firebasestorage.app",
+    messagingSenderId: "705815077213",
+    appId: "1:705815077213:web:6e6df3452b17147a3648b4"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  const sessionPhone = localStorage.getItem('gf_session_phone');
+  if (!sessionPhone){ window.location.href = 'auth.html'; }
+
+  const bnDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+  function toBn(num){ return String(num).replace(/[0-9]/g, d => bnDigits[d]); }
+  function pad(n){ return String(n).padStart(2,'0'); }
+
+  function formatCountdown(diffMs){
+    if (diffMs <= 0) return 'ম্যাচ শুরু হয়ে গেছে';
+    const totalSec = Math.floor(diffMs/1000);
+    const days = Math.floor(totalSec/86400);
+    const hours = Math.floor((totalSec%86400)/3600);
+    const mins = Math.floor((totalSec%3600)/60);
+    const secs = totalSec%60;
+    if (days > 0) return `${days}দিন ${pad(hours)}:${pad(mins)}:${pad(secs)}`;
+    return `${pad(hours)}:${pad(mins)}:${pad(secs)}`;
+  }
+
+  function showToast(message, type='info', duration=3200){
+    const stack = document.getElementById('toastStack');
+    const icons = {
+      success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+      error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+      info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+    };
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span class="icon">${icons[type]}</span><span>${message}</span>`;
+    stack.appendChild(toast);
+    setTimeout(() => { toast.classList.add('out'); setTimeout(() => toast.remove(), 240); }, duration);
+  }
+
+  // ---- self-heal: older accounts made before winningBalance/depositBalance
+  // existed won't have these fields, which trips the balance security rules
+  // on any deduction. Fill them in with 0 so old accounts behave like new ones.
+  async function ensureBalanceFields(){
+    try{
+      const snap = await db.ref('users/' + sessionPhone).get();
+      if (!snap.exists()) return;
+      const u = snap.val();
+      if (u.depositBalance === undefined){
+        await db.ref('users/' + sessionPhone + '/depositBalance').set(0).catch(() => {});
+      }
+      if (u.winningBalance === undefined){
+        await db.ref('users/' + sessionPhone + '/winningBalance').set(0).catch(() => {});
+      }
+    } catch(err){ console.error(err); }
+  }
+  ensureBalanceFields();
+
+  // ---- balances (mini pills) ----
+  async function loadMiniBalances(){
+    const snap = await db.ref('users/' + sessionPhone).get();
+    if (snap.exists()){
+      const u = snap.val();
+      document.getElementById('miniWin').textContent = 'W ৳' + toBn(u.winningBalance || 0);
+      document.getElementById('miniDep').textContent = 'D ৳' + toBn(u.depositBalance || 0);
+    }
+  }
+  loadMiniBalances();
+
+  // ---- match list ----
+  const matchesCache = {};
+  let activeModalMatchId = null;
+  let codeListenerRef = null;
+
+  async function loadMatches(){
+    const snap = await db.ref('matches').get();
+    const container = document.getElementById('matchList');
+    if (!snap.exists()){
+      container.innerHTML = `<div class="empty-state"><div class="big">🎮</div>এই মুহূর্তে কোনো ম্যাচ চালু নেই।<br>নতুন ম্যাচ যোগ হলে এখানেই দেখা যাবে।</div>`;
+      return;
+    }
+    const matches = snap.val();
+    container.innerHTML = '';
+    Object.keys(matches).forEach(matchId => {
+      matchesCache[matchId] = matches[matchId];
+      renderMatchCard(matchId, matches[matchId]);
+      // keep filled-slot count live
+      db.ref('matches/' + matchId + '/filledSlots').on('value', (s) => {
+        matchesCache[matchId].filledSlots = s.val() || 0;
+        updateSlotUI(matchId);
+      });
+    });
+  }
+
+  function renderMatchCard(matchId, match){
+    const wrap = document.createElement('div');
+    wrap.className = 'match-card-wrap';
+    wrap.innerHTML = `
+      <div class="match-card">
+        <div class="match-head">
+          <div>
+            <div class="match-name">${match.title}</div>
+            <div class="match-sub">DLS 1V1 • লাইভ ম্যাচ</div>
+          </div>
+          <div class="countdown-badge">
+            <span class="cb-label">শুরু হতে বাকি</span>
+            <span class="cb-time countdown" data-start="${match.startTime}">--:--:--</span>
+          </div>
+        </div>
+        <div class="match-stats">
+          <div class="stat-box fee">
+            <div class="s-label">এন্ট্রি ফি</div>
+            <div class="s-value">৳${toBn(match.entryFee)}</div>
+          </div>
+          <div class="stat-box prize">
+            <div class="s-label">উইনিং প্রাইজ</div>
+            <div class="s-value">৳${toBn(match.winningPrize)}</div>
+          </div>
+        </div>
+        <div class="slots-row">
+          <div class="slots-top">
+            <span>স্লট</span>
+            <span id="slotsText-${matchId}">${toBn(match.filledSlots || 0)}/${toBn(match.totalSlots)}</span>
+          </div>
+          <div class="slots-bar"><div class="slots-fill" id="slotsFill-${matchId}" style="width:${Math.min(100,((match.filledSlots||0)/match.totalSlots)*100)}%"></div></div>
+        </div>
+        <button class="join-btn" id="joinBtn-${matchId}" onclick="openMatchModal('${matchId}')">Join</button>
+        <div class="joined-panel" id="joinedPanel-${matchId}" style="display:none;">
+          <div class="jp-status">✓ জয়েন করা হয়েছে</div>
+          <div class="jp-waiting" id="jpWaiting-${matchId}">কোড এখনো দেওয়া হয়নি — অ্যাডমিন কোড দিলে এখানেই দেখতে পাবেন।</div>
+          <div class="jp-code-box" id="jpCodeBox-${matchId}" style="display:none;">
+            <span class="jp-code-text" id="jpCodeText-${matchId}"></span>
+            <button class="jp-copy-btn" onclick="copyInlineCode('${matchId}')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('matchList').appendChild(wrap);
+    updateJoinButtonState(matchId);
+  }
+
+  function updateSlotUI(matchId){
+    const match = matchesCache[matchId];
+    const txt = document.getElementById('slotsText-' + matchId);
+    const fill = document.getElementById('slotsFill-' + matchId);
+    if (txt) txt.textContent = `${toBn(match.filledSlots || 0)}/${toBn(match.totalSlots)}`;
+    if (fill) fill.style.width = Math.min(100, ((match.filledSlots||0)/match.totalSlots)*100) + '%';
+    updateJoinButtonState(matchId);
+  }
+
+  const codeListeners = {};
+  const joinedMatchIds = new Set();
+
+  async function updateJoinButtonState(matchId){
+    const btn = document.getElementById('joinBtn-' + matchId);
+    const panel = document.getElementById('joinedPanel-' + matchId);
+    if (!btn || !panel) return;
+    const match = matchesCache[matchId];
+    const joinedSnap = await db.ref(`matches/${matchId}/participants/${sessionPhone}`).get();
+    if (joinedSnap.exists()){
+      joinedMatchIds.add(matchId);
+      btn.style.display = 'none';
+      panel.style.display = 'block';
+      attachInlineCodeListener(matchId);
+    } else {
+      joinedMatchIds.delete(matchId);
+      panel.style.display = 'none';
+      btn.style.display = 'block';
+      refreshJoinButtonVisual(matchId);
+    }
+  }
+
+  // Cheap, synchronous visual refresh (no Firebase call) — safe to run every
+  // second from the existing countdown ticker to catch "match just started".
+  function refreshJoinButtonVisual(matchId){
+    if (joinedMatchIds.has(matchId)) return; // panel already shown, button hidden
+    const btn = document.getElementById('joinBtn-' + matchId);
+    const match = matchesCache[matchId];
+    if (!btn || !match) return;
+    if (Date.now() >= match.startTime){
+      btn.textContent = 'ম্যাচ শুরু হয়ে গেছে';
+      btn.className = 'join-btn full';
+    } else if ((match.filledSlots || 0) >= match.totalSlots){
+      btn.textContent = 'স্লট ফুল, অন্য ম্যাচে জয়েন করুন';
+      btn.className = 'join-btn full';
+    } else {
+      btn.textContent = 'Join';
+      btn.className = 'join-btn';
+    }
+  }
+
+  function attachInlineCodeListener(matchId){
+    if (codeListeners[matchId]) return; // already listening
+    const ref = db.ref(`matches/${matchId}/code`);
+    codeListeners[matchId] = ref;
+    ref.on('value', (snap) => {
+      const code = snap.val();
+      const waiting = document.getElementById('jpWaiting-' + matchId);
+      const codeBox = document.getElementById('jpCodeBox-' + matchId);
+      if (!waiting || !codeBox) return;
+      if (code && String(code).trim() !== ''){
+        waiting.style.display = 'none';
+        codeBox.style.display = 'flex';
+        document.getElementById('jpCodeText-' + matchId).textContent = code;
+      } else {
+        waiting.style.display = 'block';
+        codeBox.style.display = 'none';
+      }
+    });
+  }
+
+  function copyInlineCode(matchId){
+    const code = document.getElementById('jpCodeText-' + matchId).textContent;
+    navigator.clipboard.writeText(code).then(() => showToast('কোড কপি হয়েছে!', 'success', 1800));
+  }
+
+  // ---- global countdown ticker (updates every .countdown element) ----
+  setInterval(() => {
+    document.querySelectorAll('.countdown').forEach(el => {
+      const start = Number(el.dataset.start);
+      if (!start) return;
+      el.textContent = formatCountdown(start - Date.now());
+    });
+    Object.keys(matchesCache).forEach(refreshJoinButtonVisual);
+  }, 1000);
+
+  // ---- modal open/close ----
+  async function openMatchModal(matchId){
+    const match = matchesCache[matchId];
+    activeModalMatchId = matchId;
+
+    const joinedSnap = await db.ref(`matches/${matchId}/participants/${sessionPhone}`).get();
+    document.getElementById('modalOverlay').classList.add('open');
+
+    if (joinedSnap.exists()){
+      showJoinedView(matchId, match);
+    } else {
+      if (Date.now() >= match.startTime){
+        showToast('এই ম্যাচ শুরু হয়ে গেছে, তাই আর জয়েন করা যাবে না।', 'error');
+        closeModal();
+        return;
+      }
+      if ((match.filledSlots || 0) >= match.totalSlots){
+        showToast('স্লট ফুল, অন্য ম্যাচে জয়েন করুন।', 'error');
+        closeModal();
+        return;
+      }
+      document.getElementById('viewJoinForm').style.display = 'block';
+      document.getElementById('viewJoined').style.display = 'none';
+      document.getElementById('joinMatchName').textContent = match.title;
+      document.getElementById('teamManagerInput').value = '';
+      document.getElementById('teamRatingInput').value = '';
+    }
+  }
+
+  function closeModal(){
+    document.getElementById('modalOverlay').classList.remove('open');
+    if (codeListenerRef){ codeListenerRef.off(); codeListenerRef = null; }
+    activeModalMatchId = null;
+  }
+  document.getElementById('modalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'modalOverlay') closeModal();
+  });
+
+  function showJoinedView(matchId, match){
+    document.getElementById('viewJoinForm').style.display = 'none';
+    document.getElementById('viewJoined').style.display = 'block';
+    document.getElementById('joinedMatchName').textContent = 'আপনি এই ম্যাচে জয়েন করেছেন। ম্যাচ শুরুর ৫ মিনিট আগে কোড পাবেন।';
+    document.getElementById('modalCountdown').dataset.start = match.startTime;
+
+    if (codeListenerRef) codeListenerRef.off();
+    codeListenerRef = db.ref(`matches/${matchId}/code`);
+    codeListenerRef.on('value', (snap) => {
+      const code = snap.val();
+      if (code && String(code).trim() !== ''){
+        document.getElementById('waitingBox').style.display = 'none';
+        document.getElementById('codeBox').style.display = 'flex';
+        document.getElementById('codeText').textContent = code;
+      } else {
+        document.getElementById('waitingBox').style.display = 'block';
+        document.getElementById('codeBox').style.display = 'none';
+      }
+    });
+  }
+
+  function copyCode(){
+    const code = document.getElementById('codeText').textContent;
+    navigator.clipboard.writeText(code).then(() => showToast('কোড কপি হয়েছে!', 'success', 1800));
+  }
+
+  // ---- join submit: validate, deduct balance, reserve slot, save participant ----
+  async function handleJoinSubmit(){
+    const matchId = activeModalMatchId;
+    const match = matchesCache[matchId];
+    const teamManagerName = document.getElementById('teamManagerInput').value.trim();
+    const teamRating = parseFloat(document.getElementById('teamRatingInput').value);
+    const btn = document.getElementById('joinNowBtn');
+
+    if (!teamManagerName){ showToast('টিম ম্যানেজারের নাম লিখুন।', 'error'); return; }
+    if (!teamRating || teamRating <= 0){ showToast('সঠিক টিম রেটিং দিন।', 'error'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'প্রসেস হচ্ছে…';
+
+    try{
+      // defense-in-depth: re-check right before writing, in case time
+      // passed or another tab/device already joined while this form was open
+      if (Date.now() >= match.startTime){
+        showToast('এই ম্যাচ শুরু হয়ে গেছে, তাই আর জয়েন করা যাবে না।', 'error');
+        closeModal();
+        return;
+      }
+      const alreadyJoined = await db.ref(`matches/${matchId}/participants/${sessionPhone}`).get();
+      if (alreadyJoined.exists()){
+        showToast('আপনি ইতিমধ্যে এই ম্যাচে জয়েন করেছেন।', 'error');
+        closeModal();
+        updateJoinButtonState(matchId);
+        return;
+      }
+
+      await ensureBalanceFields();
+      const userSnap = await db.ref('users/' + sessionPhone).get();
+      const user = userSnap.val();
+      const dep = user.depositBalance || 0;
+      const win = user.winningBalance || 0;
+      const fee = match.entryFee;
+
+      let deductDep = 0, deductWin = 0;
+      if (dep >= fee){
+        deductDep = fee;
+      } else if (dep + win >= fee){
+        deductDep = dep;
+        deductWin = fee - dep;
+      } else {
+        showToast('পর্যাপ্ত পরিমাণ ব্যালেন্স নেই। ওয়ালেটে ডিপোজিট করুন।', 'error');
+        return;
+      }
+
+      // reserve a slot first (atomic, capped at totalSlots)
+      const slotResult = await db.ref(`matches/${matchId}/filledSlots`).transaction(cur => {
+        const current = cur || 0;
+        if (current >= match.totalSlots) return; // abort
+        return current + 1;
+      });
+      if (!slotResult.committed){
+        showToast('দুঃখিত, এই মুহূর্তে সব স্লট পূর্ণ হয়ে গেছে।', 'error');
+        return;
+      }
+
+      // deduct balances
+      if (deductDep > 0){
+        await db.ref('users/' + sessionPhone + '/depositBalance').transaction(cur => Math.max(0, (cur || 0) - deductDep));
+      }
+      if (deductWin > 0){
+        await db.ref('users/' + sessionPhone + '/winningBalance').transaction(cur => Math.max(0, (cur || 0) - deductWin));
+      }
+
+      // save participant entry
+      await db.ref(`matches/${matchId}/participants/${sessionPhone}`).set({
+        teamManagerName: teamManagerName,
+        teamRating: teamRating,
+        joinedAt: firebase.database.ServerValue.TIMESTAMP
+      });
+
+      // also save a permanent copy under matchHistory — this survives even
+      // if an admin later deletes the match itself from the matches node.
+      await db.ref('matchHistory/' + sessionPhone).push().set({
+        matchId: matchId,
+        matchTitle: match.title,
+        entryFee: match.entryFee,
+        winningPrize: match.winningPrize,
+        status: 'ongoing',
+        winAmount: 0,
+        joinedAt: firebase.database.ServerValue.TIMESTAMP
+      }).catch(err => console.error('matchHistory write failed', err));
+
+      showToast('ম্যাচে সফলভাবে জয়েন করা হয়েছে!', 'success');
+      updateSlotUI(matchId);
+      loadMiniBalances();
+      showJoinedView(matchId, match);
+    } catch(err){
+      console.error(err);
+      showToast('জয়েন করা যায়নি। আবার চেষ্টা করুন।', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Join Now';
+    }
+  }
+
+  loadMatches();
+</script>
+
+</body>
+</html>

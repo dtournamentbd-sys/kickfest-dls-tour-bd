@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ওয়ালেট - DLS Tour BD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #060a10;
+    --grid: #0e1520;
+    --cyan: #22d3ee;
+    --magenta: #ec4899;
+    --violet: #8b5cf6;
+    --gold: #f5c451;
+    --green: #34d399;
+    --amber: #f5b342;
+    --orange: #ff8a3d;
+    --danger: #f43f5e;
+    --text: #f3f6fa;
+    --muted: #7b869a;
+    --card: rgba(13,18,28,0.82);
+    --card-border: rgba(255,255,255,0.08);
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  /* Chrome (especially Android) force-applies a white autofill background
+     to tel/number fields even with autocomplete="off". This overrides it. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 1000px rgba(255,255,255,0.04) inset !important;
+    -webkit-text-fill-color: #f3f6fa !important;
+    caret-color: #f3f6fa !important;
+    transition: background-color 9999s ease-in-out 0s;
+  }
+  html, body{ width:100%; min-height:100%; background: var(--bg); font-family:'Inter', sans-serif; color: var(--text); }
+  body{ position:relative; min-height:100vh; padding-bottom: 84px; }
+
+  .grid-field{
+    position:fixed; inset:0;
+    background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 42px 42px;
+    -webkit-mask-image: radial-gradient(circle at 50% 0%, black 5%, transparent 65%);
+            mask-image: radial-gradient(circle at 50% 0%, black 5%, transparent 65%);
+    z-index:0;
+  }
+
+  .page{ position:relative; z-index:1; max-width:480px; margin:0 auto; padding: 16px 16px 0; }
+
+  .topbar{ display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+  .back-btn{ width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; background: var(--card); border:1px solid var(--card-border); color: var(--text); cursor:pointer; flex-shrink:0; }
+  .back-btn svg{ width:19px; height:19px; }
+  .topbar-title{ flex:1; font-family:'Rajdhani', sans-serif; font-weight:700; font-size:19px; letter-spacing:0.3px; }
+
+  /* ---- balance summary ---- */
+  .balance-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px; }
+  .balance-card{
+    border-radius:16px; padding:16px;
+    background: var(--card); border:1px solid var(--card-border);
+  }
+  .balance-card .bc-label{ font-size:12px; color: var(--muted); letter-spacing:0.3px; margin-bottom:6px; }
+  .balance-card .bc-amt{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:24px; }
+  .balance-card.win{ border-color: rgba(52,211,153,0.35); }
+  .balance-card.win .bc-amt{ color: var(--green); }
+  .balance-card.dep{ border-color: rgba(34,211,238,0.3); }
+  .balance-card.dep .bc-amt{ color: var(--cyan); }
+
+  .action-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:22px; }
+  .action-btn{
+    padding:15px; border-radius:14px; border:none; cursor:pointer;
+    font-family:'Inter', sans-serif; font-weight:600; font-size:14.5px;
+    display:flex; flex-direction:column; align-items:center; gap:7px;
+  }
+  .action-btn svg{ width:22px; height:22px; }
+  .action-btn.add{ background: linear-gradient(135deg, var(--cyan), var(--violet)); color:#fff; }
+  .action-btn.withdraw{ background: var(--card); border:1px solid var(--card-border); color: var(--text); }
+
+  .section-note{ font-size:12.5px; color: var(--muted); text-align:center; line-height:1.6; margin-bottom: 10px; }
+
+  /* ---- add-money views ---- */
+  .view{ display:none; }
+  .view.active{ display:block; animation: viewIn 0.25s ease; }
+  @keyframes viewIn{ from{ opacity:0; transform: translateY(8px);} to{ opacity:1; transform: translateY(0);} }
+
+  .panel-card{
+    background: var(--card); border:1px solid var(--card-border); border-radius:20px; padding:20px 18px; margin-bottom:16px;
+  }
+  .panel-head{ text-align:center; margin-bottom:16px; }
+  .panel-head .ph-title{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:19px; }
+  .panel-head .ph-sub{ font-size:12.5px; color: var(--muted); margin-top:4px; }
+
+  .current-balance-strip{
+    background: linear-gradient(135deg, rgba(139,92,246,0.25), rgba(34,211,238,0.2));
+    border-radius:14px; padding:14px; text-align:center; margin-bottom:18px;
+  }
+  .current-balance-strip .cb-label{ font-size:11.5px; color: var(--muted); letter-spacing:0.4px; }
+  .current-balance-strip .cb-amt{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:26px; margin-top:4px; }
+
+  .field-label{ display:block; font-size:12.5px; color: var(--muted); margin-bottom:8px; }
+  .amount-input{
+    width:100%; background: rgba(255,255,255,0.04); border:1px solid var(--card-border); border-radius:12px;
+    padding:13px 14px; font-size:18px; font-weight:600; color: var(--text); font-family:'Rajdhani', sans-serif;
+    margin-bottom:12px;
+  }
+  .amount-input:focus{ outline:none; border-color: rgba(34,211,238,0.5); }
+
+  .preset-row{ display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; margin-bottom:20px; }
+  .preset-btn{
+    padding:10px 4px; border-radius:10px; border:1px solid var(--card-border); background: rgba(255,255,255,0.03);
+    color: var(--text); font-family:'Inter', sans-serif; font-weight:600; font-size:13px; cursor:pointer;
+  }
+  .preset-btn.selected{ border-color: var(--cyan); background: rgba(34,211,238,0.1); color: var(--cyan); }
+
+  .method-row{ display:grid; grid-template-columns: repeat(2, 1fr); gap:10px; margin-bottom:20px; }
+  .method-card{
+    position:relative;
+    border-radius:14px; border:1.5px solid var(--card-border); background: rgba(255,255,255,0.02);
+    padding:14px 6px; display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer;
+  }
+  .method-card .m-icon{ width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-family:'Rajdhani', sans-serif; font-weight:700; font-size:13px; color:#fff; }
+  .method-card.bkash .m-icon{ background: linear-gradient(135deg,#e6197a,#a3105a); }
+  .method-card.nagad .m-icon{ background: linear-gradient(135deg,#ff8a3d,#d9600a); }
+  .method-card .m-label{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:13.5px; }
+  .method-card .m-sub{ font-size:10px; color: var(--muted); }
+  .method-card.selected{ border-color: var(--cyan); }
+  .method-card .check{ position:absolute; top:6px; right:6px; width:16px; height:16px; border-radius:50%; background: var(--green); display:none; align-items:center; justify-content:center; }
+  .method-card.selected .check{ display:flex; }
+  .method-card .check svg{ width:10px; height:10px; color:#04140f; }
+
+  .primary-btn{
+    width:100%; padding:14px; border:none; border-radius:13px;
+    background: linear-gradient(135deg, var(--cyan), var(--violet)); color:#fff;
+    font-family:'Inter', sans-serif; font-weight:600; font-size:15px; cursor:pointer;
+  }
+  .primary-btn:disabled{ opacity:0.5; cursor:not-allowed; }
+
+  /* ---- withdraw view ---- */
+  .type-row{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px; }
+  .type-btn{
+    padding:12px; border-radius:12px; border:1.5px solid var(--card-border); background: rgba(255,255,255,0.02);
+    color: var(--text); font-family:'Inter', sans-serif; font-weight:600; font-size:13.5px; cursor:pointer; text-align:center;
+  }
+  .type-btn.selected{ border-color: var(--cyan); background: rgba(34,211,238,0.1); color: var(--cyan); }
+
+  .withdraw-only-note{
+    font-size:11.5px; color: var(--muted); text-align:center; margin: -6px 0 16px; line-height:1.6;
+  }
+
+  .fee-preview{
+    background: rgba(245,196,81,0.06); border:1px solid rgba(245,196,81,0.3); border-radius:12px;
+    padding:12px 14px; margin: 4px 0 18px; display:none;
+  }
+  .fee-preview.show{ display:block; }
+  .fee-preview .fp-row{ display:flex; justify-content:space-between; font-size:12.5px; color: var(--muted); margin-bottom:4px; }
+  .fee-preview .fp-row:last-child{ margin-bottom:0; }
+  .fee-preview .fp-row b{ color: var(--text); font-weight:600; }
+  .fee-preview .fp-net{ color: var(--green) !important; font-weight:700 !important; }
+
+  .withdraw-rules{
+    background: rgba(255,255,255,0.03); border:1px solid var(--card-border); border-radius:12px;
+    padding:12px 14px; margin-bottom:20px; font-size:11.5px; color: var(--muted); line-height:1.85;
+  }
+  .withdraw-rules .wr-title{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:13px; color: var(--text); margin-bottom:6px; letter-spacing:0.3px; }
+  .withdraw-rules .wr-sign{ margin-top:8px; color: var(--cyan); font-weight:600; }
+
+  /* ---- withdraw closed banner ---- */
+  .closed-banner{
+    display:flex; gap:12px; align-items:flex-start;
+    background: rgba(245,196,81,0.08); border:1px solid rgba(245,196,81,0.4); border-radius:14px;
+    padding:14px 15px; margin-bottom:18px;
+  }
+  .closed-banner .cb-icon{ font-size:22px; flex-shrink:0; line-height:1; }
+  .closed-banner .cb-title{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:14px; color: var(--gold); margin-bottom:4px; }
+  .closed-banner .cb-sub{ font-size:11.5px; color: var(--muted); line-height:1.6; margin-bottom:6px; }
+  .closed-banner .cb-reopen{ font-size:11.5px; color: var(--text); }
+  .closed-banner .cb-reopen b{ color: var(--cyan); }
+
+  /* ---- unique number input (withdraw recipient) ---- */
+
+
+  /* ---- step 2: instructions ---- */
+  .send-amount-box{ text-align:center; margin-bottom:6px; }
+  .send-amount-box .sa-label{ font-size:11.5px; color: var(--muted); letter-spacing:0.4px; }
+  .send-amount-box .sa-amt{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:32px; color: var(--green); margin-top:4px; }
+
+  .send-number-box{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    border:1.5px dashed; border-radius:13px; padding:14px 15px; margin:16px 0 14px;
+  }
+  .send-number-box .num{ font-family:'JetBrains Mono', monospace; font-size:19px; font-weight:600; letter-spacing:1px; }
+  .copy-chip{
+    display:flex; align-items:center; gap:6px; padding:8px 12px; border-radius:9px; border:1px solid var(--card-border);
+    background: rgba(255,255,255,0.04); color: var(--text); font-size:12.5px; font-weight:600; cursor:pointer; flex-shrink:0;
+  }
+  .copy-chip svg{ width:14px; height:14px; }
+
+  .method-badge{
+    display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:20px;
+    font-family:'Rajdhani', sans-serif; font-weight:700; font-size:13px; margin-bottom:14px;
+  }
+
+  .step-list{ display:flex; flex-direction:column; gap:10px; margin-bottom:18px; }
+  .step-row{ display:flex; align-items:center; gap:12px; }
+  .step-row .si{ width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .step-row .si svg{ width:15px; height:15px; }
+  .step-row .st{ font-size:13px; }
+  .step-row .st b{ font-weight:700; }
+
+  .trxid-row{ display:flex; gap:8px; margin-bottom:6px; }
+  .trxid-row input{ flex:1; }
+  .paste-btn{
+    width:48px; border-radius:12px; border:1px solid var(--card-border); background: rgba(255,255,255,0.04);
+    color: var(--text); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+  }
+  .paste-btn svg{ width:17px; height:17px; }
+
+  .verify-note{ font-size:11.5px; color: var(--muted); text-align:center; line-height:1.6; margin-top:12px; }
+
+  .back-link-row{ display:flex; align-items:center; gap:6px; font-size:13px; color: var(--muted); margin-bottom:14px; cursor:pointer; }
+  .back-link-row svg{ width:14px; height:14px; }
+
+  /* ---- my deposit requests ---- */
+  .req-section{ margin-top:6px; }
+  .req-title{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:14.5px; margin-bottom:10px; }
+  .req-card{ display:flex; align-items:center; justify-content:space-between; gap:10px; background: var(--card); border:1px solid var(--card-border); border-radius:12px; padding:11px 13px; margin-bottom:8px; }
+  .req-card .rc-amt{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:16px; }
+  .req-card .rc-sub{ font-size:11px; color: var(--muted); margin-top:2px; word-break:break-all; }
+  .req-status{ font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:20px; flex-shrink:0; }
+  .req-status.pending{ color: var(--gold); background: rgba(245,196,81,0.12); }
+  .req-status.approved{ color: var(--green); background: rgba(52,211,153,0.12); }
+  .req-status.rejected{ color: var(--danger); background: rgba(244,63,94,0.12); }
+  .req-empty{ text-align:center; font-size:12px; color: var(--muted); padding:10px; }
+
+  /* ---- toast ---- */
+  .toast-stack{ position:fixed; left:50%; bottom:26px; transform:translateX(-50%); z-index:80; display:flex; flex-direction:column; gap:10px; width:min(360px, 92vw); }
+  .toast{ display:flex; align-items:flex-start; gap:10px; background: rgba(15,20,30,0.94); border:1px solid rgba(255,255,255,0.08); border-left:3px solid var(--cyan); border-radius:12px; padding:13px 14px; font-size:13.5px; line-height:1.5; box-shadow:0 14px 30px rgba(0,0,0,0.4); animation: toastIn 0.28s ease; backdrop-filter: blur(10px); }
+  .toast.error{ border-left-color: var(--danger); }
+  .toast.success{ border-left-color: var(--green); }
+  .toast .icon svg{ width:16px; height:16px; }
+  .toast.error .icon{ color: var(--danger); }
+  .toast.success .icon{ color: var(--green); }
+  .toast.info .icon{ color: var(--cyan); }
+  @keyframes toastIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  .toast.out{ animation: toastOut 0.24s ease forwards; }
+  @keyframes toastOut{ to{opacity:0; transform:translateY(-6px);} }
+
+  /* ---- bottom nav ---- */
+  .bottom-nav{ position:fixed; left:0; right:0; bottom:0; z-index:20; display:flex; background: rgba(9,13,20,0.94); border-top:1px solid rgba(255,255,255,0.06); backdrop-filter: blur(14px); padding:8px 6px 10px; }
+  .nav-item{ flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; background:none; border:none; color: var(--muted); font-family:'Inter', sans-serif; font-size:11px; font-weight:600; cursor:pointer; }
+  .nav-item svg{ width:21px; height:21px; }
+  .nav-item.active{ color: var(--cyan); }
+</style>
+</head>
+<body>
+
+<div class="grid-field"></div>
+
+<div class="page">
+  <div class="topbar">
+    <button class="back-btn" id="topBackBtn" onclick="handleTopBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <div class="topbar-title">ওয়ালেট</div>
+  </div>
+
+  <!-- ============ VIEW: wallet home ============ -->
+  <div class="view active" id="viewWalletHome">
+    <div class="balance-grid">
+      <div class="balance-card win">
+        <div class="bc-label">উইনিং ব্যালেন্স</div>
+        <div class="bc-amt" id="homeWinBalance">৳০</div>
+      </div>
+      <div class="balance-card dep">
+        <div class="bc-label">ডিপোজিট ব্যালেন্স</div>
+        <div class="bc-amt" id="homeDepBalance">৳০</div>
+      </div>
+    </div>
+
+    <div class="action-grid">
+      <button class="action-btn add" onclick="goToView('viewAddStep1')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        অ্যাড মানি
+      </button>
+      <button class="action-btn withdraw" onclick="handleWithdraw()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5h-4a2 2 0 0 1 0-4h4Z"/></svg>
+        উইথড্র
+      </button>
+    </div>
+
+    <div class="section-note">অ্যাড মানি করতে বিকাশ বা নগদে টাকা পাঠিয়ে ট্রানজেকশন আইডি দিয়ে রিকোয়েস্ট করুন। অ্যাডমিন যাচাই করে অ্যাপ্রুভ করলে ডিপোজিট ব্যালেন্সে যোগ হবে।</div>
+
+    <div class="req-section">
+      <div class="req-title">আমার অ্যাড মানি রিকোয়েস্ট</div>
+      <div id="myRequests"><div class="req-empty">লোড হচ্ছে…</div></div>
+    </div>
+  </div>
+
+  <!-- ============ VIEW: add money step 1 (amount + method) ============ -->
+  <div class="view" id="viewAddStep1">
+    <div class="panel-card">
+      <div class="panel-head">
+        <div class="ph-title">💼 অ্যাড ব্যালেন্স</div>
+        <div class="ph-sub">দ্রুত ম্যাচে জয়েন করতে ব্যালেন্স যোগ করুন</div>
+      </div>
+
+      <div class="current-balance-strip">
+        <div class="cb-label">বর্তমান ডিপোজিট ব্যালেন্স</div>
+        <div class="cb-amt" id="strip1DepBalance">৳০</div>
+      </div>
+
+      <label class="field-label">টাকার পরিমাণ (BDT)</label>
+      <input type="number" class="amount-input" id="amountInput" placeholder="সর্বনিম্ন ১০ টাকা অ্যাড মানি করতে হবে" inputmode="numeric" autocomplete="off" oninput="clearPresetSelection()">
+
+      <div class="preset-row" id="presetRow">
+        <button class="preset-btn" onclick="pickPreset(50)">৳৫০</button>
+        <button class="preset-btn" onclick="pickPreset(100)">৳১০০</button>
+        <button class="preset-btn" onclick="pickPreset(200)">৳২০০</button>
+        <button class="preset-btn" onclick="pickPreset(500)">৳৫০০</button>
+      </div>
+
+      <label class="field-label">পেমেন্ট মেথড</label>
+      <div class="method-row" id="methodRow">
+        <div class="method-card bkash" onclick="pickMethod('bkash')">
+          <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+          <div class="m-icon">bK</div>
+          <div class="m-label">bKash</div>
+          <div class="m-sub">Personal</div>
+        </div>
+        <div class="method-card nagad" onclick="pickMethod('nagad')">
+          <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+          <div class="m-icon">নগ</div>
+          <div class="m-label">Nagad</div>
+          <div class="m-sub">Personal</div>
+        </div>
+      </div>
+
+      <button class="primary-btn" onclick="handleAddBalanceSubmit()">➕ Add Balance</button>
+    </div>
+  </div>
+
+  <!-- ============ VIEW: add money step 2 (instructions + verify) ============ -->
+  <div class="view" id="viewAddStep2">
+    <div class="back-link-row" onclick="goToView('viewAddStep1')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      পরিমাণ/মেথড পরিবর্তন করুন
+    </div>
+
+    <div class="panel-card">
+      <div class="send-amount-box">
+        <div class="sa-label">পাঠাতে হবে</div>
+        <div class="sa-amt" id="sendAmountText">৳০</div>
+      </div>
+
+      <div style="text-align:center;">
+        <span class="method-badge" id="methodBadge"></span>
+      </div>
+
+      <div class="send-number-box" id="sendNumberBox">
+        <span class="num">01890636303</span>
+        <button class="copy-chip" onclick="copyNumber()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy
+        </button>
+      </div>
+
+      <div class="step-list" id="stepList"></div>
+
+      <label class="field-label">ট্রানজেকশন আইডি (TrxID) দিন</label>
+      <div class="trxid-row">
+        <input type="text" class="amount-input" id="trxIdInput" placeholder="যেমন: 8N7K2LQXYZ" autocomplete="off" style="margin-bottom:0;">
+        <button class="paste-btn" onclick="pasteTrxId()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+        </button>
+      </div>
+
+      <button class="primary-btn" id="verifyBtn" style="margin-top:14px;" onclick="handleSubmitRequest()">📨 রিকোয়েস্ট পাঠান</button>
+
+      <div class="verify-note">রিকোয়েস্ট পাঠানোর পর অ্যাডমিন টাকা মিলিয়ে অ্যাপ্রুভ করলে ডিপোজিট ব্যালেন্সে যোগ হবে। ভুল আইডি দিলে রিকোয়েস্ট রিজেক্ট হবে, আর একই ট্রানজেকশন আইডি দিয়ে দ্বিতীয়বার রিকোয়েস্ট পাঠানো যাবে না।</div>
+    </div>
+  </div>
+
+  <!-- ============ VIEW: withdraw ============ -->
+  <div class="view" id="viewWithdraw">
+    <div class="panel-card">
+      <div class="panel-head">
+        <div class="ph-title">💸 উইথড্র</div>
+        <div class="ph-sub">শুধুমাত্র উইনিং ব্যালেন্স থেকে উত্তোলন করা যাবে</div>
+      </div>
+
+      <div class="closed-banner" id="closedBanner">
+        <div class="cb-icon">⛔</div>
+        <div>
+          <div class="cb-title">উইথড্র সাময়িকভাবে বন্ধ</div>
+          <div class="cb-sub">প্রতিদিন রাত ১১টা থেকে সকাল ১০টা পর্যন্ত (বাংলাদেশ সময়) উইথড্র বন্ধ থাকে।</div>
+          <div class="cb-reopen">আবার চালু হবে: <b>সকাল ১০:০০ টায়</b></div>
+        </div>
+      </div>
+
+      <div class="balance-grid" style="margin-bottom:18px;">
+        <div class="balance-card win">
+          <div class="bc-label">উইনিং ব্যালেন্স</div>
+          <div class="bc-amt" id="wdWinBalance">৳০</div>
+        </div>
+        <div class="balance-card dep">
+          <div class="bc-label">ডিপোজিট ব্যালেন্স</div>
+          <div class="bc-amt" id="wdDepBalance">৳০</div>
+        </div>
+      </div>
+      <div class="withdraw-only-note">শুধু উইনিং ব্যালেন্স উত্তোলনযোগ্য — ডিপোজিট ব্যালেন্স দিয়ে ম্যাচে জয়েন করা যাবে, উত্তোলন করা যাবে না।</div>
+
+      <label class="field-label">পেমেন্ট মেথড</label>
+      <div class="method-row" id="wdMethodRow">
+        <div class="method-card bkash" onclick="pickWithdrawMethod('bkash')">
+          <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+          <div class="m-icon">bK</div>
+          <div class="m-label">bKash</div>
+        </div>
+        <div class="method-card nagad" onclick="pickWithdrawMethod('nagad')">
+          <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+          <div class="m-icon">নগ</div>
+          <div class="m-label">Nagad</div>
+        </div>
+      </div>
+
+      <label class="field-label">একাউন্ট টাইপ</label>
+      <div class="type-row" id="wdTypeRow">
+        <button class="type-btn" onclick="pickAccountType('personal', this)">Personal</button>
+        <button class="type-btn" onclick="pickAccountType('agent', this)">Agent</button>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" id="wdNumberLabel">আপনার নম্বর</label>
+        <input type="tel" class="amount-input" id="wdRecipientNumber" placeholder="01XXXXXXXXX" maxlength="11" inputmode="numeric" autocomplete="off">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">উত্তোলনের পরিমাণ (BDT)</label>
+        <input type="number" class="amount-input" id="wdAmountInput" placeholder="সর্বনিম্ন ১০০" inputmode="numeric" autocomplete="off" oninput="updateWithdrawFeePreview()">
+      </div>
+
+      <div class="fee-preview" id="wdFeePreview">
+        <div class="fp-row"><span>উত্তোলনের পরিমাণ</span><b id="wdFpAmount">৳০</b></div>
+        <div class="fp-row"><span>চার্জ</span><b id="wdFpFee">৳০</b></div>
+        <div class="fp-row"><span>আপনি পাবেন</span><b class="fp-net" id="wdFpNet">৳০</b></div>
+      </div>
+
+      <div class="withdraw-rules">
+        <div class="wr-title">নিয়মাবলী</div>
+        <div>💳 প্রতিদিন সর্বোচ্চ ২ বার Withdraw করা যাবে।</div>
+        <div>💰 একবারে সর্বোচ্চ ৳৫০০ Withdraw করা যাবে।</div>
+        <div>⏳ Withdraw Request দেওয়ার পর ধৈর্য ধরে অপেক্ষা করুন — ২৪ ঘণ্টার মধ্যে প্রসেস করা হবে।</div>
+        <div>📊 প্রতি ১০০ টাকা উত্তোলনে ৫ টাকা, আর ১০১ টাকা বা তার বেশিতে ১০ টাকা হারে চার্জ কাটা হবে।</div>
+        <div>🔒 সর্বনিম্ন উত্তোলন ৳১০০।</div>
+        <div class="wr-sign">— DLS Tour BD Support</div>
+      </div>
+
+      <button class="primary-btn" id="wdSubmitBtn" onclick="handleWithdrawSubmit()">উইথড্র রিকোয়েস্ট সাবমিট করুন</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<!-- bottom nav -->
+<div class="bottom-nav">
+  <button class="nav-item" onclick="location.href='home.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18 4.5 4.5 0 0 0 0-9 4.5 4.5 0 0 1 0-9Z"/></svg>
+    ম্যাচ
+  </button>
+  <button class="nav-item" onclick="location.href='history.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+    হিস্টোরি
+  </button>
+  <button class="nav-item active" onclick="location.href='wallet.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5h-4a2 2 0 0 1 0-4h4Z"/></svg>
+    ওয়ালেট
+  </button>
+  <button class="nav-item" onclick="location.href='profile.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    প্রোফাইল
+  </button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMt3Ra3GMGS4uwn6-LGHwOw4XuFIcR-aE",
+    authDomain: "dls-tournament-bd-d8f0a.firebaseapp.com",
+    databaseURL: "https://dls-tournament-bd-d8f0a-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "dls-tournament-bd-d8f0a",
+    storageBucket: "dls-tournament-bd-d8f0a.firebasestorage.app",
+    messagingSenderId: "705815077213",
+    appId: "1:705815077213:web:6e6df3452b17147a3648b4"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  const sessionPhone = localStorage.getItem('gf_session_phone');
+  if (!sessionPhone){ window.location.href = 'auth.html'; }
+
+  const bnDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+  function toBn(num){ return String(num).replace(/[0-9]/g, d => bnDigits[d]); }
+  function isValidPhone(phone){ return /^01[3-9][0-9]{8}$/.test(phone); }
+
+  function showToast(message, type='info', duration=3400){
+    const stack = document.getElementById('toastStack');
+    const icons = {
+      success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+      error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+      info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+    };
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span class="icon">${icons[type]}</span><span>${message}</span>`;
+    stack.appendChild(toast);
+    setTimeout(() => { toast.classList.add('out'); setTimeout(() => toast.remove(), 240); }, duration);
+  }
+
+  // ---- self-heal: older test accounts made before winningBalance/
+  // depositBalance existed won't have these fields at all, which trips
+  // the security rules on any balance write. Fill them in with 0 here
+  // so old accounts behave exactly like freshly registered ones.
+  async function ensureBalanceFields(){
+    try{
+      const snap = await db.ref('users/' + sessionPhone).get();
+      if (!snap.exists()) return;
+      const u = snap.val();
+      if (u.depositBalance === undefined){
+        await db.ref('users/' + sessionPhone + '/depositBalance').set(0).catch(() => {});
+      }
+      if (u.winningBalance === undefined){
+        await db.ref('users/' + sessionPhone + '/winningBalance').set(0).catch(() => {});
+      }
+    } catch(err){ console.error(err); }
+  }
+  ensureBalanceFields();
+
+  // ---- transaction history logging ----
+  async function logTransaction(phone, type, amount, note){
+    try{
+      const ref = db.ref('transactions/' + phone).push();
+      await ref.set({
+        type: type,
+        amount: amount,
+        note: note || '',
+        createdAt: firebase.database.ServerValue.TIMESTAMP
+      });
+    } catch(err){ console.error(err); }
+  }
+
+  // ---- balances ----
+  async function refreshBalances(){
+    const snap = await db.ref('users/' + sessionPhone).get();
+    if (snap.exists()){
+      const u = snap.val();
+      currentWinBalance = Number(u.winningBalance) || 0;
+      currentDepBalance = Number(u.depositBalance) || 0;
+      document.getElementById('homeWinBalance').textContent = '৳' + toBn(currentWinBalance);
+      document.getElementById('homeDepBalance').textContent = '৳' + toBn(currentDepBalance);
+      document.getElementById('strip1DepBalance').textContent = '৳' + toBn(currentDepBalance);
+    }
+  }
+  refreshBalances();
+
+  // ---- view switching ----
+  function goToView(id){
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+  function handleTopBack(){
+    const step1 = document.getElementById('viewAddStep1').classList.contains('active');
+    const step2 = document.getElementById('viewAddStep2').classList.contains('active');
+    const withdraw = document.getElementById('viewWithdraw').classList.contains('active');
+    if (step2){ goToView('viewAddStep1'); }
+    else if (step1 || withdraw){ goToView('viewWalletHome'); }
+    else { location.href = 'home.html'; }
+  }
+
+  let currentWinBalance = 0;
+  let currentDepBalance = 0;
+
+  // ---- withdraw time window (10:00 AM - 11:00 PM, Bangladesh time) ----
+  function getBDHour(){
+    const hourStr = new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka', hour: 'numeric', hour12: false });
+    return parseInt(hourStr, 10) % 24;
+  }
+  function getBDDateString(ts){
+    return new Date(ts).toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' });
+  }
+  function isWithdrawWindowOpen(){
+    const h = getBDHour();
+    return h >= 10 && h < 23;
+  }
+  function updateWithdrawAvailability(){
+    const open = isWithdrawWindowOpen();
+    document.getElementById('closedBanner').style.display = open ? 'none' : 'flex';
+    const btn = document.getElementById('wdSubmitBtn');
+    btn.disabled = !open;
+    btn.textContent = open ? 'উইথড্র রিকোয়েস্ট সাবমিট করুন' : 'বন্ধ • সকাল ১০:০০ টায় আবার চালু হবে';
+    return open;
+  }
+
+  function handleWithdraw(){
+    document.getElementById('wdWinBalance').textContent = '৳' + toBn(currentWinBalance);
+    document.getElementById('wdDepBalance').textContent = '৳' + toBn(currentDepBalance);
+    updateWithdrawAvailability();
+    goToView('viewWithdraw');
+  }
+
+  // ---- withdraw form state ----
+  let selectedWithdrawMethod = null;
+  let selectedAccountType = null;
+
+  function pickWithdrawMethod(method){
+    selectedWithdrawMethod = method;
+    document.querySelectorAll('#wdMethodRow .method-card').forEach(c => c.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+    document.getElementById('wdNumberLabel').textContent = methodMeta[method].label + ' অ্যাকাউন্ট নম্বর';
+  }
+
+  function pickAccountType(type, btn){
+    selectedAccountType = type;
+    document.querySelectorAll('#wdTypeRow .type-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  }
+
+  function calcWithdrawFee(amount){
+    const rate = amount <= 100 ? 0.05 : 0.10;
+    const fee = Math.round(amount * rate);
+    return { fee: fee, net: amount - fee };
+  }
+
+  function updateWithdrawFeePreview(){
+    const amount = Number(document.getElementById('wdAmountInput').value);
+    const preview = document.getElementById('wdFeePreview');
+    if (!amount || amount < 100){
+      preview.classList.remove('show');
+      return;
+    }
+    const { fee, net } = calcWithdrawFee(amount);
+    document.getElementById('wdFpAmount').textContent = '৳' + toBn(amount);
+    document.getElementById('wdFpFee').textContent = '৳' + toBn(fee);
+    document.getElementById('wdFpNet').textContent = '৳' + toBn(net);
+    preview.classList.add('show');
+  }
+
+  async function handleWithdrawSubmit(){
+    const amount = Number(document.getElementById('wdAmountInput').value);
+    const recipientNumber = document.getElementById('wdRecipientNumber').value.trim();
+    const btn = document.getElementById('wdSubmitBtn');
+
+    if (!selectedWithdrawMethod){ showToast('একটি পেমেন্ট মেথড নির্বাচন করুন।', 'error'); return; }
+    if (!selectedAccountType){ showToast('একাউন্ট টাইপ (Personal/Agent) নির্বাচন করুন।', 'error'); return; }
+    if (!isValidPhone(recipientNumber)){ showToast('সঠিক ফরম্যাটে মোবাইল নম্বর দিন।', 'error'); return; }
+    if (!amount || amount < 100){ showToast('সর্বনিম্ন ৳১০০ উত্তোলন করা যাবে।', 'error'); return; }
+    if (amount > 500){ showToast('একবারে সর্বোচ্চ ৳৫০০ পর্যন্ত উইথড্র করা যাবে।', 'error'); return; }
+    if (!updateWithdrawAvailability()){
+      showToast('রাত ১১টা থেকে সকাল ১০টা পর্যন্ত উইথড্র বন্ধ থাকে। সকাল ১০টার পর আবার চেষ্টা করুন।', 'error');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'যাচাই করা হচ্ছে…';
+
+    // Re-fetch the balance fresh right now — the cached currentWinBalance
+    // may still be its initial 0 if the page's first load hasn't finished
+    // (e.g. on a slow connection), which would wrongly block a valid withdraw.
+    try{
+      const freshSnap = await db.ref('users/' + sessionPhone + '/winningBalance').get();
+      currentWinBalance = Number(freshSnap.val()) || 0;
+    } catch(err){
+      console.error(err);
+      showToast('ব্যালেন্স যাচাই করা যায়নি। ইন্টারনেট সংযোগ চেক করে আবার চেষ্টা করুন।', 'error');
+      btn.disabled = false;
+      btn.textContent = 'উইথড্র রিকোয়েস্ট সাবমিট করুন';
+      return;
+    }
+
+    if (amount > currentWinBalance){
+      showToast('আপনার উইনিং ব্যালেন্সে পর্যাপ্ত টাকা নেই।', 'error');
+      btn.disabled = false;
+      btn.textContent = 'উইথড্র রিকোয়েস্ট সাবমিট করুন';
+      return;
+    }
+
+    const { fee, net } = calcWithdrawFee(amount);
+
+    btn.disabled = true;
+    btn.textContent = 'সাবমিট করা হচ্ছে…';
+
+    try{
+      const todayStr = getBDDateString(Date.now());
+      const allSnap = await db.ref('withdrawalRequests').get();
+      let todayCount = 0;
+      if (allSnap.exists()){
+        allSnap.forEach(child => {
+          const v = child.val();
+          if (v.phone === sessionPhone && getBDDateString(v.createdAt) === todayStr) todayCount++;
+        });
+      }
+      if (todayCount >= 2){
+        showToast('আজকে সর্বোচ্চ ২ বার উইথড্র রিকোয়েস্ট করা হয়ে গেছে। আগামীকাল আবার চেষ্টা করুন।', 'error');
+        return;
+      }
+
+      // We already confirmed sufficient balance via the fresh fetch above,
+      // so the transaction callback just needs to subtract safely — it must
+      // never return undefined on a null/uncached first pass (Firebase
+      // treats that as "abort the whole transaction", not "retry"), or it
+      // can wrongly cancel a perfectly valid withdrawal on a slow connection.
+      const deductResult = await db.ref('users/' + sessionPhone + '/winningBalance')
+        .transaction(cur => Math.max(0, (Number(cur) || 0) - amount));
+
+      if (!deductResult.committed){
+        showToast('ব্যালেন্স কাটা যায়নি। আবার চেষ্টা করুন বা সাপোর্টে যোগাযোগ করুন।', 'error');
+        return;
+      }
+
+      await db.ref('withdrawalRequests').push().set({
+        phone: sessionPhone,
+        method: selectedWithdrawMethod,
+        accountType: selectedAccountType,
+        recipientNumber: recipientNumber,
+        amount: amount,
+        fee: fee,
+        netAmount: net,
+        status: 'pending',
+        createdAt: firebase.database.ServerValue.TIMESTAMP
+      });
+
+      await logTransaction(sessionPhone, 'withdraw', amount, `${methodMeta[selectedWithdrawMethod].label} (${selectedAccountType}) • ${recipientNumber}`);
+
+      showToast('সফলভাবে উইথড্র রিকোয়েস্ট সাবমিট হয়েছে! ২৪ ঘণ্টার মধ্যে অ্যাডমিন আপনাকে টাকা পাঠিয়ে দেবে।', 'success', 5000);
+
+      document.getElementById('wdAmountInput').value = '';
+      document.getElementById('wdRecipientNumber').value = '';
+      document.getElementById('wdFeePreview').classList.remove('show');
+      selectedWithdrawMethod = null;
+      selectedAccountType = null;
+      document.querySelectorAll('#wdMethodRow .method-card').forEach(c => c.classList.remove('selected'));
+      document.querySelectorAll('#wdTypeRow .type-btn').forEach(b => b.classList.remove('selected'));
+
+      refreshBalances();
+      goToView('viewWalletHome');
+    } catch(err){
+      console.error(err);
+      showToast('উইথড্র রিকোয়েস্ট সাবমিট করা যায়নি। আবার চেষ্টা করুন।', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'উইথড্র রিকোয়েস্ট সাবমিট করুন';
+    }
+  }
+
+  // ---- step 1: amount + method selection ----
+  let selectedAmount = null;
+  let selectedMethod = null;
+
+  function pickPreset(amount){
+    selectedAmount = amount;
+    document.getElementById('amountInput').value = amount;
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+  }
+  function clearPresetSelection(){
+    selectedAmount = null;
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('selected'));
+  }
+  function pickMethod(method){
+    selectedMethod = method;
+    document.querySelectorAll('.method-card').forEach(c => c.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+  }
+
+  const methodMeta = {
+    bkash: { label: 'bKash', color: '#e6197a', dial: '*247#', border: 'rgba(230,25,122,0.5)' },
+    nagad: { label: 'Nagad', color: '#ff8a3d', dial: '*167#', border: 'rgba(255,138,61,0.5)' }
+  };
+
+  function handleAddBalanceSubmit(){
+    const typed = parseInt(document.getElementById('amountInput').value, 10);
+    if (!typed || typed <= 0){ showToast('সঠিক পরিমাণ টাকা লিখুন।', 'error'); return; }
+    if (typed < 10){ showToast('সর্বনিম্ন ৳১০ যোগ করা যাবে।', 'error'); return; }
+    if (!selectedMethod){ showToast('একটি পেমেন্ট মেথড নির্বাচন করুন।', 'error'); return; }
+
+    selectedAmount = typed;
+    renderStep2();
+    goToView('viewAddStep2');
+  }
+
+  function renderStep2(){
+    const meta = methodMeta[selectedMethod];
+    document.getElementById('sendAmountText').textContent = '৳' + toBn(selectedAmount);
+
+    const badge = document.getElementById('methodBadge');
+    badge.textContent = meta.label + ' Personal · Send Money';
+    badge.style.background = meta.color + '22';
+    badge.style.color = meta.color;
+    badge.style.border = '1px solid ' + meta.border;
+
+    const box = document.getElementById('sendNumberBox');
+    box.style.borderColor = meta.border;
+
+    document.getElementById('stepList').innerHTML = `
+      <div class="step-row"><span class="si" style="background:${meta.color}22; color:${meta.color};"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/></svg></span><span class="st"><b>${meta.label}</b> অ্যাপ খুলুন, অথবা ডায়াল করুন <b>${meta.dial}</b></span></div>
+      <div class="step-row"><span class="si" style="background:${meta.color}22; color:${meta.color};"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></span><span class="st"><b>Send Money</b> অপশনে ট্যাপ করুন</span></div>
+      <div class="step-row"><span class="si" style="background:${meta.color}22; color:${meta.color};"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg></span><span class="st">নম্বর <b>01890636303</b> লিখুন</span></div>
+      <div class="step-row"><span class="si" style="background:${meta.color}22; color:${meta.color};"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span><span class="st">পরিমাণ <b>৳${toBn(selectedAmount)}</b> লিখুন</span></div>
+      <div class="step-row"><span class="si" style="background:${meta.color}22; color:${meta.color};"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span><span class="st">আপনার <b>PIN</b> দিয়ে কনফার্ম করুন</span></div>
+      <div class="step-row"><span class="si" style="background:${meta.color}22; color:${meta.color};"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span class="st">SMS থেকে <b>TrxID</b> কপি করুন</span></div>
+    `;
+    document.getElementById('trxIdInput').value = '';
+  }
+
+  function copyNumber(){
+    navigator.clipboard.writeText('01890636303').then(() => showToast('নম্বর কপি হয়েছে।', 'success', 1600));
+  }
+  function pasteTrxId(){
+    navigator.clipboard.readText().then(text => {
+      document.getElementById('trxIdInput').value = text.trim();
+    }).catch(() => showToast('ক্লিপবোর্ড থেকে পেস্ট করা যায়নি, নিজে টাইপ করুন।', 'error'));
+  }
+
+  // ---- manual deposit request (admin approves) ----
+  async function handleSubmitRequest(){
+    const trxId = document.getElementById('trxIdInput').value.trim().toUpperCase();
+    const btn = document.getElementById('verifyBtn');
+
+    if (!selectedMethod || !selectedAmount){
+      showToast('পরিমাণ ও পেমেন্ট মেথড আবার নির্বাচন করুন।', 'error');
+      goToView('viewAddStep1');
+      return;
+    }
+    if (!trxId){ showToast('ট্রানজেকশন আইডি লিখুন।', 'error'); return; }
+    if (!/^[A-Z0-9]{8,12}$/.test(trxId)){
+      showToast('ট্রানজেকশন আইডি সঠিক নয়। শুধু ইংরেজি অক্ষর ও সংখ্যা (৮-১২টি) দিন।', 'error');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'পাঠানো হচ্ছে…';
+
+    try{
+      await Promise.race([
+        submitRequestInner(trxId),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 15000))
+      ]);
+    } catch(err){
+      console.error(err);
+      if (err && err.message === 'TIMEOUT'){
+        showToast('ইন্টারনেট সংযোগ দুর্বল থাকায় অনেক সময় লেগে যাচ্ছে। সংযোগ চেক করে আবার চেষ্টা করুন।', 'error', 5000);
+      } else if (err && err.code === 'PERMISSION_DENIED'){
+        showToast('এই ট্রানজেকশন আইডি দিয়ে আগেই রিকোয়েস্ট পাঠানো হয়েছে।', 'error');
+      } else {
+        showToast('রিকোয়েস্ট পাঠানো যায়নি। আবার চেষ্টা করুন।', 'error');
+      }
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '📨 রিকোয়েস্ট পাঠান';
+    }
+  }
+
+  async function submitRequestInner(trxId){
+    // The request is stored under its own TrxID as the key, so the same
+    // TrxID can never be submitted twice (also enforced by Firebase rules).
+    const ref = db.ref('depositRequests/' + trxId);
+    const snap = await ref.get();
+    if (snap.exists()){
+      showToast('এই ট্রানজেকশন আইডি দিয়ে আগেই রিকোয়েস্ট পাঠানো হয়েছে।', 'error');
+      return;
+    }
+
+    await ref.set({
+      phone: sessionPhone,
+      trxId: trxId,
+      method: selectedMethod,
+      amount: selectedAmount,
+      status: 'pending',
+      createdAt: firebase.database.ServerValue.TIMESTAMP
+    });
+
+    showToast('রিকোয়েস্ট পাঠানো হয়েছে! অ্যাডমিন যাচাই করে অ্যাপ্রুভ করলে ডিপোজিট ব্যালেন্সে টাকা যোগ হবে।', 'success', 5000);
+    document.getElementById('trxIdInput').value = '';
+    goToView('viewWalletHome');
+  }
+
+  // ---- my deposit requests (live status) ----
+  const reqStatusLabel = { pending: 'অপেক্ষমান', approved: 'অ্যাপ্রুভড', rejected: 'রিজেক্টেড' };
+  const reqMethodLabel = { bkash: 'bKash', nagad: 'Nagad' };
+
+  function listenMyRequests(){
+    const box = document.getElementById('myRequests');
+    db.ref('depositRequests').orderByChild('phone').equalTo(sessionPhone).on('value', snap => {
+      const list = [];
+      snap.forEach(child => { list.push(child.val()); });
+      list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      const recent = list.slice(0, 5);
+
+      if (!recent.length){
+        box.innerHTML = '<div class="req-empty">এখনো কোনো রিকোয়েস্ট নেই।</div>';
+      } else {
+        box.innerHTML = recent.map(r => `
+          <div class="req-card">
+            <div>
+              <div class="rc-amt">৳${toBn(r.amount)} · ${reqMethodLabel[r.method] || r.method}</div>
+              <div class="rc-sub">TrxID: ${r.trxId}</div>
+            </div>
+            <span class="req-status ${r.status}">${reqStatusLabel[r.status] || r.status}</span>
+          </div>
+        `).join('');
+      }
+      refreshBalances();
+    }, err => {
+      console.error(err);
+      box.innerHTML = '<div class="req-empty">রিকোয়েস্ট লোড করা যায়নি।</div>';
+    });
+  }
+  listenMyRequests();
+</script>
+
+</body>
+</html>

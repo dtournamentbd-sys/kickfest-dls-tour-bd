@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Admin Panel - DLS Tour BD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #060a10;
+    --grid: #0e1520;
+    --cyan: #22d3ee;
+    --violet: #8b5cf6;
+    --gold: #f5c451;
+    --green: #34d399;
+    --danger: #f43f5e;
+    --muted: #7b869a;
+    --text: #f3f6fa;
+    --card: rgba(13,18,28,0.85);
+    --card-border: rgba(255,255,255,0.08);
+    --field: rgba(255,255,255,0.04);
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 1000px rgba(255,255,255,0.04) inset !important;
+    -webkit-text-fill-color: #f3f6fa !important;
+    caret-color: #f3f6fa !important;
+    transition: background-color 9999s ease-in-out 0s;
+  }
+
+  html, body{ width:100%; min-height:100%; background: var(--bg); font-family:'Inter', sans-serif; color: var(--text); }
+  body{ position:relative; min-height:100vh; }
+
+  .grid-field{
+    position:fixed; inset:0;
+    background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 42px 42px;
+    -webkit-mask-image: radial-gradient(circle at 50% 0%, black 5%, transparent 65%);
+            mask-image: radial-gradient(circle at 50% 0%, black 5%, transparent 65%);
+    z-index:0;
+  }
+
+  /* ---- password gate ---- */
+  .gate{ position:relative; z-index:1; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .gate-card{ width:100%; max-width:360px; background: var(--card); border:1px solid var(--card-border); border-radius:20px; padding:32px 26px; text-align:center; }
+  .gate-icon{ font-size:38px; margin-bottom:14px; }
+  .gate-title{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:20px; margin-bottom:6px; }
+  .gate-sub{ font-size:13px; color: var(--muted); margin-bottom:22px; }
+  .gate-input{ width:100%; background: var(--field); border:1px solid var(--card-border); border-radius:12px; padding:13px 14px; font-size:15px; color: var(--text); margin-bottom:14px; text-align:center; }
+  .gate-input:focus{ outline:none; border-color: rgba(34,211,238,0.5); }
+  .gate-btn{ width:100%; padding:13px; border:none; border-radius:12px; background: linear-gradient(135deg, var(--cyan), var(--violet)); color:#fff; font-weight:600; font-size:14.5px; cursor:pointer; }
+
+  /* ---- shell ---- */
+  #dashboard{ display:none; position:relative; z-index:1; max-width:640px; margin:0 auto; padding:18px 16px 60px; }
+  .topbar{ display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+  .back-btn{ width:38px; height:38px; border-radius:11px; display:flex; align-items:center; justify-content:center; background: var(--card); border:1px solid var(--card-border); color: var(--cyan); cursor:pointer; flex-shrink:0; }
+  .back-btn svg{ width:18px; height:18px; }
+  .topbar-title{ flex:1; font-family:'Rajdhani', sans-serif; font-weight:700; font-size:19px; }
+  .logout-btn{ padding:9px 14px; border-radius:10px; border:1px solid rgba(244,63,94,0.4); background: rgba(244,63,94,0.1); color: var(--danger); font-weight:600; font-size:12px; cursor:pointer; flex-shrink:0; }
+
+  .view{ display:none; }
+  .view.active{ display:block; }
+
+  /* ---- main menu ---- */
+  .menu-grid{ display:flex; flex-direction:column; gap:14px; }
+  .menu-card{
+    display:flex; align-items:center; gap:14px;
+    background: var(--card); border:1px solid var(--card-border); border-radius:18px; padding:20px;
+    cursor:pointer; text-align:left; color: var(--text); font-family:'Inter', sans-serif;
+  }
+  .menu-card .mc-icon{ width:50px; height:50px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0; }
+  .menu-card.m1 .mc-icon{ background: rgba(34,211,238,0.14); }
+  .menu-card.m2 .mc-icon{ background: rgba(245,196,81,0.14); }
+  .menu-card.m3 .mc-icon{ background: rgba(139,92,246,0.16); }
+  .menu-card.m4 .mc-icon{ background: rgba(245,196,81,0.14); }
+  .menu-card.m5 .mc-icon{ background: rgba(34,211,238,0.14); }
+  .menu-card.m6 .mc-icon{ background: rgba(52,211,153,0.14); }
+  .menu-card .mc-title{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:17px; }
+  .menu-card .mc-sub{ font-size:12px; color: var(--muted); margin-top:2px; }
+  .menu-card .mc-chev{ margin-left:auto; color: var(--muted); flex-shrink:0; }
+  .count-badge{ margin-left:auto; min-width:22px; height:22px; padding:0 7px; border-radius:11px; background: var(--danger); color:#fff; font-size:12px; font-weight:700; display:none; align-items:center; justify-content:center; flex-shrink:0; }
+  .count-badge + .mc-chev{ margin-left:8px; }
+
+  /* ---- sub-tabs (inside Match view) ---- */
+  .subtab-row{ display:flex; gap:8px; margin-bottom:18px; }
+  .subtab{ flex:1; padding:11px; border-radius:12px; border:1px solid var(--card-border); background: var(--card); color: var(--muted); font-weight:600; font-size:13px; cursor:pointer; text-align:center; }
+  .subtab.active{ background: linear-gradient(135deg, rgba(34,211,238,0.22), rgba(139,92,246,0.22)); border-color: rgba(34,211,238,0.4); color: var(--text); }
+
+  .section{ background: var(--card); border:1px solid var(--card-border); border-radius:18px; padding:18px; margin-bottom:16px; }
+  .field-group{ margin-bottom:12px; }
+  .field-label{ display:block; font-size:12px; color: var(--muted); margin-bottom:6px; }
+  .field-input{ width:100%; background: var(--field); border:1px solid var(--card-border); border-radius:11px; padding:11px 13px; font-size:14px; color: var(--text); }
+  .field-input:focus{ outline:none; border-color: rgba(34,211,238,0.5); }
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .primary-btn{ width:100%; padding:12px; border:none; border-radius:11px; background: linear-gradient(135deg, var(--cyan), var(--violet)); color:#fff; font-weight:600; font-size:13.5px; cursor:pointer; margin-top:6px; }
+  .primary-btn:disabled{ opacity:0.5; cursor:not-allowed; }
+
+  /* ---- match list ---- */
+  .match-item{ border:1px solid var(--card-border); border-radius:14px; padding:14px; margin-bottom:12px; background: rgba(255,255,255,0.02); }
+  .match-item .mi-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:8px; }
+  .match-item .mi-title{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:15.5px; }
+  .match-item .mi-num{ color: var(--cyan); }
+  .match-item .mi-meta{ font-size:11.5px; color: var(--muted); margin-top:2px; }
+  .del-btn{ padding:6px 10px; border-radius:8px; border:1px solid rgba(244,63,94,0.4); background: rgba(244,63,94,0.1); color: var(--danger); font-size:11.5px; font-weight:600; cursor:pointer; flex-shrink:0; }
+  .stat-chip{ display:inline-flex; gap:5px; font-size:11.5px; color: var(--muted); background: rgba(255,255,255,0.03); border-radius:8px; padding:4px 9px; margin:2px 4px 2px 0; }
+  .code-row{ display:flex; gap:8px; margin:10px 0; }
+  .code-row input{ flex:1; }
+  .mini-btn{ padding:0 14px; border-radius:10px; border:none; background: rgba(34,211,238,0.15); color: var(--cyan); font-weight:600; font-size:12.5px; cursor:pointer; }
+
+  .participant-row{ display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:10px; background: rgba(255,255,255,0.03); margin-bottom:6px; }
+  .participant-row .pr-info{ flex:1; font-size:12.5px; min-width:0; }
+  .participant-row .pr-info b{ font-weight:700; }
+  .participant-row .pr-info span{ color: var(--muted); display:block; font-size:11px; margin-top:1px; }
+  .win-btn{ padding:7px 13px; border-radius:9px; border:none; background: linear-gradient(135deg, var(--green), #1e9c6f); color:#04140f; font-weight:700; font-size:11.5px; cursor:pointer; flex-shrink:0; }
+  .win-btn:disabled{ opacity:0.35; cursor:not-allowed; }
+  .winner-badge{ font-size:11px; font-weight:700; color: var(--green); background: rgba(52,211,153,0.14); padding:5px 11px; border-radius:20px; flex-shrink:0; }
+
+  .empty-note{ font-size:12.5px; color: var(--muted); text-align:center; padding:14px 0; }
+
+  /* ---- withdraw ---- */
+  .wd-item{ border:1px solid var(--card-border); border-radius:14px; padding:13px 14px; margin-bottom:10px; background: rgba(255,255,255,0.02); }
+  .wd-item .wd-top{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+  .wd-item .wd-phone{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:14.5px; }
+  .wd-item .wd-meta{ font-size:11.5px; color: var(--muted); margin-top:2px; line-height:1.6; }
+  .wd-amt{ font-family:'JetBrains Mono', monospace; font-weight:600; color: var(--gold); font-size:14px; }
+  .wd-actions{ display:flex; gap:8px; margin-top:10px; }
+  .wd-actions button{ flex:1; padding:8px; border-radius:9px; border:none; font-weight:600; font-size:12px; cursor:pointer; }
+  .approve-btn{ background: rgba(52,211,153,0.16); color: var(--green); }
+  .reject-btn{ background: rgba(244,63,94,0.14); color: var(--danger); }
+  .status-badge{ font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:20px; flex-shrink:0; }
+  .status-badge.pending{ background: rgba(245,196,81,0.14); color: var(--gold); }
+  .status-badge.completed{ background: rgba(52,211,153,0.14); color: var(--green); }
+  .status-badge.approved{ background: rgba(52,211,153,0.14); color: var(--green); }
+  .status-badge.rejected{ background: rgba(244,63,94,0.12); color: var(--danger); }
+
+  /* ---- deposit requests ---- */
+  .dep-amount-row{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin:8px 0 6px; }
+  .dep-amount{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:24px; color: var(--green); }
+  .dep-method{ font-size:12px; font-weight:600; color: var(--text); background: rgba(255,255,255,0.06); padding:4px 10px; border-radius:20px; }
+  .dep-trx{ font-family:'JetBrains Mono', monospace; font-size:13px; font-weight:600; letter-spacing:0.5px; color: var(--cyan); word-break:break-all; }
+  .dep-section-title{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:14px; color: var(--muted); margin:16px 0 10px; }
+
+  /* ---- user management ---- */
+  .user-item{ border:1px solid var(--card-border); border-radius:14px; padding:13px 14px; margin-bottom:10px; background: rgba(255,255,255,0.02); }
+  .user-item .ui-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .user-item .ui-name{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:14.5px; }
+  .user-item .ui-phone{ font-size:11.5px; color: var(--muted); }
+  .user-item .ui-meta{ font-size:11px; color: var(--muted); margin-bottom:8px; }
+  .user-item .ui-bal{ display:flex; gap:14px; font-size:12px; margin-bottom:10px; }
+  .user-item .ui-bal b{ color: var(--text); }
+  .adjust-row{ display:flex; gap:6px; }
+  .adjust-row select, .adjust-row input{ background: var(--field); border:1px solid var(--card-border); border-radius:9px; color: var(--text); font-size:12px; padding:7px 8px; }
+  .adjust-row select{ flex:1.1; }
+  .adjust-row input{ flex:1; min-width:0; }
+  .adjust-row button{ padding:0 12px; border-radius:9px; border:none; background: rgba(34,211,238,0.16); color: var(--cyan); font-weight:600; font-size:12px; cursor:pointer; flex-shrink:0; }
+  .search-box{ margin-bottom:14px; }
+
+  /* ---- password reset (user management) ---- */
+  .pw-reset-row{ display:flex; gap:6px; margin-top:8px; }
+  .pw-reset-row input{ flex:1; min-width:0; background: var(--field); border:1px solid var(--card-border); border-radius:9px; color: var(--text); font-size:12px; padding:7px 8px; }
+  .pw-reset-row button{ padding:0 12px; border-radius:9px; border:none; background: rgba(245,196,81,0.18); color: var(--gold); font-weight:600; font-size:12px; cursor:pointer; flex-shrink:0; }
+
+  /* ---- approve / reject result popup (premium) ---- */
+  .result-overlay{ position:fixed; inset:0; z-index:90; display:none; align-items:center; justify-content:center; padding:24px; background: radial-gradient(circle at 50% 40%, rgba(10,16,28,0.78), rgba(2,4,8,0.9)); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  .result-overlay.open{ display:flex; animation: resFade 0.25s ease; }
+  @keyframes resFade{ from{opacity:0;} to{opacity:1;} }
+
+  .result-card{
+    --accent: var(--green);
+    --accent2: var(--cyan);
+    --accent-rgb: 52,211,153;
+    position:relative; overflow:hidden; width:100%; max-width:330px; text-align:center;
+    padding:34px 22px 30px; border-radius:28px;
+    background:
+      radial-gradient(120% 70% at 50% 0%, rgba(var(--accent-rgb),0.20), transparent 60%),
+      linear-gradient(180deg, #101826 0%, #090d15 100%);
+    border:1px solid rgba(var(--accent-rgb),0.35);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.65), 0 0 70px rgba(var(--accent-rgb),0.22), inset 0 1px 0 rgba(255,255,255,0.10);
+    animation: resPop 0.55s cubic-bezier(.2,1.25,.3,1);
+  }
+  .result-card.rejected{ --accent: var(--danger); --accent2: var(--gold); --accent-rgb: 244,63,94; }
+  @keyframes resPop{ from{ opacity:0; transform: scale(0.82) translateY(24px); } to{ opacity:1; transform: scale(1) translateY(0); } }
+
+  /* slow rotating light sweep */
+  .result-card::before{
+    content:''; position:absolute; top:-60%; left:-60%; width:220%; height:220%;
+    background: conic-gradient(from 0deg, transparent 0deg, rgba(var(--accent-rgb),0.10) 40deg, transparent 90deg, transparent 360deg);
+    animation: resSpin 7s linear infinite; pointer-events:none;
+  }
+  @keyframes resSpin{ to{ transform: rotate(360deg); } }
+  /* glossy top edge shine */
+  .result-card::after{
+    content:''; position:absolute; top:0; left:0; right:0; height:1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+    opacity:0.6; pointer-events:none;
+  }
+  .result-card > *{ position:relative; z-index:1; }
+
+  .result-particles{ position:absolute !important; inset:0; pointer-events:none; z-index:0 !important; overflow:hidden; }
+  .result-particles i{
+    position:absolute; left:50%; top:104px; width:6px; height:6px; border-radius:50%;
+    background: var(--c, var(--green)); opacity:0;
+    box-shadow: 0 0 10px var(--c, var(--green));
+    animation: resBurst 1.5s cubic-bezier(.15,.7,.3,1) forwards; animation-delay: var(--d, 0.35s);
+  }
+  @keyframes resBurst{
+    0%{ opacity:0; transform: translate(-50%,-50%) scale(0.4); }
+    15%{ opacity:1; }
+    100%{ opacity:0; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1); }
+  }
+
+  .result-icon{ position:relative; width:92px; height:92px; margin:0 auto 18px; }
+  .result-icon::before, .result-icon::after{
+    content:''; position:absolute; inset:-2px; border-radius:50%;
+    border:1.5px solid rgba(var(--accent-rgb),0.55);
+    animation: resRing 2.2s ease-out infinite;
+  }
+  .result-icon::after{ animation-delay:1.1s; }
+  @keyframes resRing{ 0%{ transform: scale(0.9); opacity:0.9; } 100%{ transform: scale(1.75); opacity:0; } }
+  .result-icon .ri-disc{
+    position:absolute; inset:0; border-radius:50%;
+    background: radial-gradient(circle at 30% 25%, rgba(var(--accent-rgb),0.40), rgba(var(--accent-rgb),0.10) 70%);
+    border:1px solid rgba(var(--accent-rgb),0.5);
+    box-shadow: 0 0 36px rgba(var(--accent-rgb),0.45), inset 0 0 22px rgba(var(--accent-rgb),0.25);
+    animation: resDisc 0.6s cubic-bezier(.2,1.4,.3,1) both;
+  }
+  @keyframes resDisc{ from{ transform: scale(0.3); opacity:0; } to{ transform: scale(1); opacity:1; } }
+  .result-icon svg{ position:relative; width:100%; height:100%; padding:20px; }
+  .result-icon .rs-mark{
+    fill:none; stroke:#fff; stroke-width:3.6; stroke-linecap:round; stroke-linejoin:round;
+    stroke-dasharray:50; stroke-dashoffset:50; animation: resDraw 0.45s 0.4s ease forwards;
+    filter: drop-shadow(0 0 6px rgba(var(--accent-rgb),0.9));
+  }
+  @keyframes resDraw{ to{ stroke-dashoffset:0; } }
+
+  .result-chip{
+    display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+    padding:5px 14px; border-radius:20px; margin-bottom:12px;
+    color: var(--accent); background: rgba(var(--accent-rgb),0.12); border:1px solid rgba(var(--accent-rgb),0.35);
+    animation: resUp 0.5s 0.35s ease both;
+  }
+  .result-title{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:22px; margin-bottom:2px; letter-spacing:0.3px; animation: resUp 0.5s 0.42s ease both; }
+  .result-amount{
+    font-family:'Rajdhani', sans-serif; font-weight:700; font-size:46px; line-height:1.15; margin-bottom:16px;
+    background: linear-gradient(90deg, #fff 0%, var(--accent) 45%, var(--accent2) 100%);
+    background-size:200% auto; -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color: transparent; color: transparent;
+    filter: drop-shadow(0 0 18px rgba(var(--accent-rgb),0.45));
+    animation: resUp 0.5s 0.5s ease both, resShimmer 3s linear infinite;
+  }
+  @keyframes resShimmer{ to{ background-position: 200% center; } }
+  @keyframes resUp{ from{ opacity:0; transform: translateY(12px); } to{ opacity:1; transform: translateY(0); } }
+
+  .result-sub{
+    text-align:left; padding:6px 14px; border-radius:16px;
+    background: rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07);
+    animation: resUp 0.5s 0.6s ease both;
+  }
+  .rs-row{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:9px 0; font-size:12px; color: var(--muted); }
+  .rs-row + .rs-row{ border-top:1px dashed rgba(255,255,255,0.09); }
+  .rs-row b{ color: var(--text); font-family:'JetBrains Mono', monospace; font-size:12px; font-weight:600; text-align:right; word-break:break-all; }
+  .rs-row b.accent{ color: var(--accent); }
+  .result-note{ margin-top:14px; font-size:11.5px; color: var(--muted); animation: resUp 0.5s 0.7s ease both; }
+
+  .result-bar{ position:absolute !important; left:0; bottom:0; height:4px; width:100%; transform-origin:left; animation: resBar 3.2s linear forwards; z-index:2 !important; background: linear-gradient(90deg, var(--accent), var(--accent2)); box-shadow: 0 0 14px rgba(var(--accent-rgb),0.8); }
+  @keyframes resBar{ from{ transform: scaleX(1); } to{ transform: scaleX(0); } }
+
+  /* ---- premium confirm dialog ---- */
+  .pc-overlay{ position:fixed; inset:0; z-index:95; display:none; align-items:center; justify-content:center; padding:22px; background: radial-gradient(circle at 50% 40%, rgba(10,16,28,0.72), rgba(2,4,8,0.88)); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  .pc-overlay.open{ display:flex; animation: resFade 0.2s ease; }
+  .pc-card{
+    --accent: var(--green); --accent2: var(--cyan); --accent-rgb: 52,211,153;
+    position:relative; overflow:hidden; width:100%; max-width:340px; padding:28px 20px 20px; border-radius:26px; text-align:center;
+    background:
+      radial-gradient(120% 60% at 50% 0%, rgba(var(--accent-rgb),0.18), transparent 62%),
+      linear-gradient(180deg, #101826 0%, #090d15 100%);
+    border:1px solid rgba(var(--accent-rgb),0.32);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.65), 0 0 60px rgba(var(--accent-rgb),0.18), inset 0 1px 0 rgba(255,255,255,0.10);
+    animation: resPop 0.45s cubic-bezier(.2,1.25,.3,1);
+  }
+  .pc-card.reject{ --accent: var(--danger); --accent2: var(--gold); --accent-rgb: 244,63,94; }
+  .pc-card::after{ content:''; position:absolute; top:0; left:0; right:0; height:1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent); opacity:0.6; }
+  .pc-icon{ position:relative; width:64px; height:64px; margin:0 auto 14px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px;
+    background: radial-gradient(circle at 30% 25%, rgba(var(--accent-rgb),0.40), rgba(var(--accent-rgb),0.10) 70%);
+    border:1px solid rgba(var(--accent-rgb),0.5); box-shadow: 0 0 28px rgba(var(--accent-rgb),0.40), inset 0 0 18px rgba(var(--accent-rgb),0.22); }
+  .pc-icon::before{ content:''; position:absolute; inset:-2px; border-radius:50%; border:1.5px solid rgba(var(--accent-rgb),0.5); animation: resRing 2.2s ease-out infinite; }
+  .pc-title{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:20px; margin-bottom:2px; }
+  .pc-sub{ font-size:12px; color: var(--muted); margin-bottom:6px; }
+  .pc-amount{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:40px; line-height:1.2; margin-bottom:14px;
+    background: linear-gradient(90deg, #fff 0%, var(--accent) 50%, var(--accent2) 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color: transparent; color: transparent;
+    filter: drop-shadow(0 0 14px rgba(var(--accent-rgb),0.4)); }
+  .pc-rows{ text-align:left; padding:4px 14px; border-radius:16px; background: rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); margin-bottom:18px; }
+  .pc-actions{ display:flex; gap:10px; }
+  .pc-actions button{ flex:1; padding:13px 10px; border-radius:13px; font-weight:700; font-size:13.5px; cursor:pointer; font-family:'Inter', sans-serif; }
+  .pc-cancel{ background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); color: var(--text); }
+  .pc-ok{ border:none; color:#04140f; background: linear-gradient(135deg, var(--accent), var(--accent2)); box-shadow: 0 8px 22px rgba(var(--accent-rgb),0.35); }
+  .pc-card.reject .pc-ok{ color:#fff; }
+  .pc-actions button:active{ transform: scale(0.97); }
+
+  /* ---- toast ---- */
+  .toast-stack{ position:fixed; left:50%; bottom:22px; transform:translateX(-50%); z-index:80; display:flex; flex-direction:column; gap:10px; width:min(360px, 92vw); }
+  .toast{ background: rgba(15,20,30,0.95); border:1px solid rgba(255,255,255,0.08); border-left:3px solid var(--cyan); border-radius:12px; padding:12px 14px; font-size:13px; line-height:1.5; box-shadow:0 14px 30px rgba(0,0,0,0.4); animation: toastIn 0.28s ease; }
+  .toast.error{ border-left-color: var(--danger); }
+  .toast.success{ border-left-color: var(--green); }
+  @keyframes toastIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  .toast.out{ animation: toastOut 0.24s ease forwards; }
+  @keyframes toastOut{ to{opacity:0; transform:translateY(-6px);} }
+</style>
+</head>
+<body>
+
+<div class="grid-field"></div>
+
+<div class="gate" id="gateView">
+  <div class="gate-card">
+    <div class="gate-icon">🔐</div>
+    <div class="gate-title">Admin Panel</div>
+    <div class="gate-sub">DLS Tour BD পরিচালনার জন্য পাসওয়ার্ড দিন</div>
+    <input type="password" class="gate-input" id="gatePassword" placeholder="পাসওয়ার্ড" autocomplete="off">
+    <button class="gate-btn" onclick="tryLogin()">প্রবেশ করুন</button>
+  </div>
+</div>
+
+<div id="dashboard">
+
+  <!-- ===== MAIN MENU ===== -->
+  <div class="view active" id="viewMenu">
+    <div class="topbar">
+      <div class="topbar-title">⚙️ Admin Panel</div>
+      <button class="logout-btn" onclick="adminLogout()">লগ আউট</button>
+    </div>
+    <div class="menu-grid">
+      <button class="menu-card m1" onclick="goTo('viewMatch')">
+        <div class="mc-icon">⚽</div>
+        <div><div class="mc-title">ম্যাচ</div><div class="mc-sub">তৈরি করুন ও পাবলিশ করা ম্যাচ দেখুন</div></div>
+        <span class="mc-chev">›</span>
+      </button>
+      <button class="menu-card m6" onclick="goTo('viewDeposits')">
+        <div class="mc-icon">💰</div>
+        <div><div class="mc-title">অ্যাড মানি রিকোয়েস্ট</div><div class="mc-sub">ইউজারের ডিপোজিট রিকোয়েস্ট অ্যাপ্রুভ/রিজেক্ট করুন</div></div>
+        <span class="count-badge" id="depPendingBadge">0</span>
+        <span class="mc-chev">›</span>
+      </button>
+      <button class="menu-card m2" onclick="goTo('viewWithdraw')">
+        <div class="mc-icon">💸</div>
+        <div><div class="mc-title">উইথড্র রিকোয়েস্ট</div><div class="mc-sub">পেন্ডিং রিকোয়েস্ট প্রসেস করুন</div></div>
+        <span class="mc-chev">›</span>
+      </button>
+      <button class="menu-card m3" onclick="goTo('viewUsers')">
+        <div class="mc-icon">👤</div>
+        <div><div class="mc-title">ইউজার ম্যানেজমেন্ট</div><div class="mc-sub">ইউজার খুঁজুন, ব্যালেন্স দেখুন/ঠিক করুন</div></div>
+        <span class="mc-chev">›</span>
+      </button>
+      <button class="menu-card m4" onclick="goTo('viewNotice')">
+        <div class="mc-icon">📣</div>
+        <div><div class="mc-title">নোটিস বোর্ড</div><div class="mc-sub">হোম পেজের স্ক্রলিং নোটিশ বদলান</div></div>
+        <span class="mc-chev">›</span>
+      </button>
+      <button class="menu-card m5" onclick="goTo('viewNotify')">
+        <div class="mc-icon">🔔</div>
+        <div><div class="mc-title">নোটিফিকেশন পাঠান</div><div class="mc-sub">সব ইউজারের কাছে পুশ + বেল নোটিফিকেশন যাবে</div></div>
+        <span class="mc-chev">›</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== MATCH ===== -->
+  <div class="view" id="viewMatch">
+    <div class="topbar">
+      <button class="back-btn" onclick="goTo('viewMenu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <div class="topbar-title">ম্যাচ</div>
+    </div>
+
+    <div class="subtab-row">
+      <button class="subtab active" id="subtabCreate" onclick="showMatchSubtab('create')">ম্যাচ তৈরি</button>
+      <button class="subtab" id="subtabPublished" onclick="showMatchSubtab('published')">পাবলিশকৃত ম্যাচ</button>
+    </div>
+
+    <div id="matchCreatePane">
+      <div class="section">
+        <div class="field-group">
+          <label class="field-label">ম্যাচের নাম</label>
+          <input type="text" class="field-input" id="newMatchTitle" placeholder="যেমন: Weekend Cup #12">
+        </div>
+        <div class="field-group">
+          <label class="field-label">শুরুর তারিখ ও সময়</label>
+          <input type="datetime-local" class="field-input" id="newMatchTime">
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">এন্ট্রি ফি (৳)</label>
+            <input type="number" class="field-input" id="newMatchFee" placeholder="৫০">
+          </div>
+          <div class="field-group">
+            <label class="field-label">উইনিং প্রাইজ (৳)</label>
+            <input type="number" class="field-input" id="newMatchPrize" placeholder="৮০">
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">টোটাল স্লট</label>
+          <input type="number" class="field-input" id="newMatchSlots" placeholder="২">
+        </div>
+        <button class="primary-btn" id="publishBtn" onclick="createMatch()">ম্যাচ পাবলিশ করুন</button>
+      </div>
+    </div>
+
+    <div id="matchPublishedPane" style="display:none;">
+      <div id="matchList"><div class="empty-note">লোড হচ্ছে…</div></div>
+    </div>
+  </div>
+
+  <!-- ===== ADD MONEY REQUESTS ===== -->
+  <div class="view" id="viewDeposits">
+    <div class="topbar">
+      <button class="back-btn" onclick="goTo('viewMenu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <div class="topbar-title">অ্যাড মানি রিকোয়েস্ট</div>
+    </div>
+    <div id="depositList"><div class="empty-note">লোড হচ্ছে…</div></div>
+  </div>
+
+  <!-- ===== WITHDRAW ===== -->
+  <div class="view" id="viewWithdraw">
+    <div class="topbar">
+      <button class="back-btn" onclick="goTo('viewMenu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <div class="topbar-title">উইথড্র রিকোয়েস্ট</div>
+    </div>
+    <div id="withdrawList"><div class="empty-note">লোড হচ্ছে…</div></div>
+  </div>
+
+  <!-- ===== USER MANAGEMENT ===== -->
+  <div class="view" id="viewUsers">
+    <div class="topbar">
+      <button class="back-btn" onclick="goTo('viewMenu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <div class="topbar-title">ইউজার ম্যানেজমেন্ট</div>
+    </div>
+    <input type="text" class="field-input search-box" id="userSearchInput" placeholder="নাম বা মোবাইল নম্বর দিয়ে খুঁজুন" oninput="renderUserList()">
+    <div id="userList"><div class="empty-note">লোড হচ্ছে…</div></div>
+  </div>
+
+  <!-- ===== NOTICE BOARD ===== -->
+  <div class="view" id="viewNotice">
+    <div class="topbar">
+      <button class="back-btn" onclick="goTo('viewMenu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <div class="topbar-title">নোটিস বোর্ড</div>
+    </div>
+    <div class="section">
+      <div class="field-group">
+        <label class="field-label">হোম পেজের স্ক্রলিং নোটিশ টেক্সট</label>
+        <input type="text" class="field-input" id="noticeTextInput" placeholder="যেমন: 📣 নতুন ম্যাচ যোগ হয়েছে! এখনই জয়েন করুন।">
+      </div>
+      <button class="primary-btn" id="noticeSaveBtn" onclick="saveNotice()">আপডেট করুন</button>
+    </div>
+  </div>
+
+  <!-- ===== SEND NOTIFICATION ===== -->
+  <div class="view" id="viewNotify">
+    <div class="topbar">
+      <button class="back-btn" onclick="goTo('viewMenu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+      <div class="topbar-title">নোটিফিকেশন পাঠান</div>
+    </div>
+    <div class="section">
+      <div class="field-group">
+        <label class="field-label">টাইটেল</label>
+        <input type="text" class="field-input" id="notifyTitleInput" placeholder="যেমন: ম্যাচ শুরু হচ্ছে!">
+      </div>
+      <div class="field-group">
+        <label class="field-label">মেসেজ</label>
+        <input type="text" class="field-input" id="notifyBodyInput" placeholder="যেমন: আজ রাত ৮টায় নতুন ম্যাচ শুরু হবে।">
+      </div>
+      <button class="primary-btn" id="notifySendBtn" onclick="sendBroadcastNotification()">সবাইকে পাঠান</button>
+    </div>
+    <div id="notifyHistoryList"></div>
+  </div>
+
+</div>
+
+<div class="result-overlay" id="resultOverlay" onclick="hideResultPopup()">
+  <div class="result-card" id="resultCard">
+    <div class="result-particles" id="resultParticles"></div>
+    <div class="result-icon" id="resultIcon"></div>
+    <div class="result-chip" id="resultChip"></div>
+    <div class="result-title" id="resultTitle"></div>
+    <div class="result-amount" id="resultAmount"></div>
+    <div class="result-sub" id="resultSub"></div>
+    <div class="result-note" id="resultNote"></div>
+    <div class="result-bar" id="resultBar"></div>
+  </div>
+</div>
+
+<div class="pc-overlay" id="pcOverlay">
+  <div class="pc-card" id="pcCard">
+    <div class="pc-icon" id="pcIcon"></div>
+    <div class="pc-title" id="pcTitle"></div>
+    <div class="pc-sub" id="pcSub"></div>
+    <div class="pc-amount" id="pcAmount"></div>
+    <div class="pc-rows" id="pcRows"></div>
+    <div class="pc-actions">
+      <button class="pc-cancel" id="pcCancel">বাতিল</button>
+      <button class="pc-ok" id="pcOk"></button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMt3Ra3GMGS4uwn6-LGHwOw4XuFIcR-aE",
+    authDomain: "dls-tournament-bd-d8f0a.firebaseapp.com",
+    databaseURL: "https://dls-tournament-bd-d8f0a-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "dls-tournament-bd-d8f0a",
+    storageBucket: "dls-tournament-bd-d8f0a.firebasestorage.app",
+    messagingSenderId: "705815077213",
+    appId: "1:705815077213:web:6e6df3452b17147a3648b4"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // ⚠️ Anyone who can view this page's source can read this password —
+  // this is a simple gate, not real security. Keep this page's URL private.
+  const ADMIN_PASSWORD = "341327";
+
+  const bnDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+  function toBn(num){ return String(num).replace(/[0-9]/g, d => bnDigits[d]); }
+
+  function showToast(message, type='info', duration=3400){
+    const stack = document.getElementById('toastStack');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    stack.appendChild(toast);
+    setTimeout(() => { toast.classList.add('out'); setTimeout(() => toast.remove(), 240); }, duration);
+  }
+
+  function formatDateTime(ts){
+    if (!ts) return '';
+    const d = new Date(ts);
+    const day = String(d.getDate()).padStart(2,'0');
+    const month = String(d.getMonth()+1).padStart(2,'0');
+    let hours = d.getHours();
+    const mins = String(d.getMinutes()).padStart(2,'0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    return `${day}/${month} · ${hours}:${mins} ${ampm}`;
+  }
+
+  // ---- password hashing (same scheme as auth.html, so a reset here
+  // produces a hash the login page will accept) ----
+  async function hashPassword(password){
+    const data = new TextEncoder().encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  function isValidSixDigit(pw){
+    return /^[0-9]{6}$/.test(pw);
+  }
+
+  // ---- login gate ----
+  function tryLogin(){
+    const pw = document.getElementById('gatePassword').value;
+    if (pw === ADMIN_PASSWORD){
+      sessionStorage.setItem('gf_admin_ok', '1');
+      enterDashboard();
+    } else {
+      showToast('ভুল পাসওয়ার্ড।', 'error');
+    }
+  }
+  function adminLogout(){
+    sessionStorage.removeItem('gf_admin_ok');
+    location.reload();
+  }
+  function enterDashboard(){
+    document.getElementById('gateView').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    loadMatches();
+    listenDepositRequests();
+    loadWithdrawRequests();
+    loadUsers();
+    loadNotice();
+    loadNotifyHistory();
+  }
+  if (sessionStorage.getItem('gf_admin_ok') === '1'){
+    setTimeout(enterDashboard, 0);
+  }
+
+  // ---- navigation ----
+  function goTo(viewId){
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
+  }
+  function showMatchSubtab(which){
+    document.getElementById('subtabCreate').classList.toggle('active', which === 'create');
+    document.getElementById('subtabPublished').classList.toggle('active', which === 'published');
+    document.getElementById('matchCreatePane').style.display = which === 'create' ? 'block' : 'none';
+    document.getElementById('matchPublishedPane').style.display = which === 'published' ? 'block' : 'none';
+  }
+
+  // ================= MATCHES =================
+  async function createMatch(){
+    const title = document.getElementById('newMatchTitle').value.trim();
+    const timeVal = document.getElementById('newMatchTime').value;
+    const fee = Number(document.getElementById('newMatchFee').value);
+    const prize = Number(document.getElementById('newMatchPrize').value);
+    const slots = Number(document.getElementById('newMatchSlots').value);
+    const btn = document.getElementById('publishBtn');
+
+    if (!title){ showToast('ম্যাচের নাম দিন।', 'error'); return; }
+    if (!timeVal){ showToast('শুরুর সময় দিন।', 'error'); return; }
+    if (!fee || fee < 0){ showToast('সঠিক এন্ট্রি ফি দিন।', 'error'); return; }
+    if (!prize || prize < 0){ showToast('সঠিক প্রাইজ দিন।', 'error'); return; }
+    if (!slots || slots < 1){ showToast('সঠিক স্লট সংখ্যা দিন।', 'error'); return; }
+
+    const startTime = new Date(timeVal).getTime();
+    btn.disabled = true;
+
+    try{
+      await db.ref('matches').push().set({
+        title: title,
+        startTime: startTime,
+        publishedAt: firebase.database.ServerValue.TIMESTAMP,
+        entryFee: fee,
+        winningPrize: prize,
+        totalSlots: slots,
+        filledSlots: 0,
+        code: '',
+        winnerPhone: null
+      });
+      showToast('ম্যাচ পাবলিশ হয়েছে! ইউজাররা এখন এটা দেখতে পাবে।', 'success');
+      document.getElementById('newMatchTitle').value = '';
+      document.getElementById('newMatchTime').value = '';
+      document.getElementById('newMatchFee').value = '';
+      document.getElementById('newMatchPrize').value = '';
+      document.getElementById('newMatchSlots').value = '';
+      loadMatches();
+      showMatchSubtab('published');
+    } catch(err){
+      console.error(err);
+      showToast('ম্যাচ পাবলিশ করা যায়নি।', 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  let matchesCache = {};
+
+  async function loadMatches(){
+    const container = document.getElementById('matchList');
+    try{
+      const snap = await db.ref('matches').get();
+      if (!snap.exists()){
+        matchesCache = {};
+        container.innerHTML = '<div class="empty-note">কোনো ম্যাচ পাবলিশ করা হয়নি।</div>';
+        return;
+      }
+      matchesCache = snap.val();
+      // Firebase push keys sort chronologically as strings, so this keeps
+      // the first-published match on top, matching admin's expectation.
+      const orderedIds = Object.keys(matchesCache).sort();
+      container.innerHTML = '';
+      orderedIds.forEach((id, index) => renderMatchItem(id, matchesCache[id], index + 1));
+    } catch(err){
+      console.error(err);
+      container.innerHTML = '<div class="empty-note">লোড করা যায়নি।</div>';
+    }
+  }
+
+  function renderMatchItem(matchId, m, displayNumber){
+    const container = document.getElementById('matchList');
+    const wrap = document.createElement('div');
+    wrap.className = 'match-item';
+
+    const participants = m.participants || {};
+    const phones = Object.keys(participants);
+    const winnerPhone = m.winnerPhone || null;
+
+    let participantsHtml = '<div class="empty-note">এখনো কেউ জয়েন করেনি।</div>';
+    if (phones.length > 0){
+      participantsHtml = phones.map(phone => {
+        const isWinner = phone === winnerPhone;
+        const disableWin = !!winnerPhone;
+        return `
+          <div class="participant-row">
+            <div class="pr-info">
+              <b>${participants[phone].teamManagerName}</b> (রেটিং ${toBn(participants[phone].teamRating)})
+              <span>${phone}</span>
+            </div>
+            ${isWinner
+              ? '<span class="winner-badge">✓ বিজয়ী</span>'
+              : `<button class="win-btn" ${disableWin ? 'disabled' : ''} onclick="declareWinner('${matchId}', '${phone}', this)">Win</button>`}
+          </div>
+        `;
+      }).join('');
+    }
+
+    wrap.innerHTML = `
+      <div class="mi-top">
+        <div>
+          <div class="mi-title"><span class="mi-num">#${toBn(displayNumber)}</span> ${m.title}</div>
+          <div class="mi-meta">${formatDateTime(m.startTime)}</div>
+        </div>
+        <button class="del-btn" onclick="deleteMatch('${matchId}', this)">ডিলিট</button>
+      </div>
+      <div>
+        <span class="stat-chip">এন্ট্রি: ৳${toBn(m.entryFee)}</span>
+        <span class="stat-chip">প্রাইজ: ৳${toBn(m.winningPrize)}</span>
+        <span class="stat-chip">স্লট: ${toBn(m.filledSlots||0)}/${toBn(m.totalSlots)}</span>
+        ${winnerPhone ? '<span class="stat-chip" style="color:var(--green);">বিজয়ী ঘোষিত ✓</span>' : ''}
+      </div>
+      <div class="code-row">
+        <input type="text" class="field-input" id="codeInput-${matchId}" placeholder="ম্যাচ কোড" value="${m.code || ''}">
+        <button class="mini-btn" onclick="setMatchCode('${matchId}', this)">সেট করুন</button>
+      </div>
+      <div class="field-label" style="margin-top:10px;">জয়েনকারীরা (Win চাপলে সে বিজয়ী হবে)</div>
+      ${participantsHtml}
+    `;
+    container.appendChild(wrap);
+  }
+
+  async function setMatchCode(matchId, btn){
+    const code = document.getElementById('codeInput-' + matchId).value.trim();
+    if (!code){ showToast('কোড লিখুন।', 'error'); return; }
+    btn.disabled = true;
+    try{
+      await db.ref('matches/' + matchId + '/code').set(code);
+      showToast('কোড সেট হয়েছে!', 'success');
+    } catch(err){
+      console.error(err);
+      showToast('কোড সেট করা যায়নি।', 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function deleteMatch(matchId, btn){
+    if (!confirm('এই ম্যাচটি ডিলিট করতে চান? এটা আর ফেরত আনা যাবে না (তবে জয়েন করা ইউজারদের হিস্টোরি থেকে যাবে)।')) return;
+    btn.disabled = true;
+    try{
+      await db.ref('matches/' + matchId).remove();
+      showToast('ম্যাচ ডিলিট হয়েছে।', 'success');
+      loadMatches();
+    } catch(err){
+      console.error(err);
+      showToast('ডিলিট করা যায়নি।', 'error');
+      btn.disabled = false;
+    }
+  }
+
+  async function declareWinner(matchId, winnerPhone, btn){
+    const match = matchesCache[matchId];
+    if (match.winnerPhone){
+      showToast('এই ম্যাচের বিজয়ী ইতিমধ্যে দেওয়া হয়েছে।', 'error');
+      return;
+    }
+    if (!confirm(`${winnerPhone}-কে এই ম্যাচের বিজয়ী ঘোষণা করতে চান? এটা পরিবর্তন করা যাবে না।`)) return;
+
+    btn.disabled = true;
+    btn.textContent = '…';
+
+    try{
+      // lock the match to this winner first so a second click (by admin,
+      // on this device or another) can never crown a second winner
+      const claim = await db.ref('matches/' + matchId + '/winnerPhone').transaction(cur => {
+        if (cur) return; // abort: already has a winner
+        return winnerPhone;
+      });
+      if (!claim.committed){
+        showToast('এই ম্যাচের বিজয়ী ইতিমধ্যে দেওয়া হয়ে গেছে।', 'error');
+        loadMatches();
+        return;
+      }
+
+      await db.ref('users/' + winnerPhone + '/winningBalance')
+        .transaction(cur => (Number(cur) || 0) + Number(match.winningPrize));
+
+      await logAdminTransaction(winnerPhone, 'match_win', Number(match.winningPrize), `জয়ী: ${match.title}`);
+
+      // update every participant's matchHistory entry for this match
+      const phones = Object.keys(match.participants || {});
+      for (const phone of phones){
+        const isWinner = phone === winnerPhone;
+        const histSnap = await db.ref('matchHistory/' + phone).orderByChild('matchId').equalTo(matchId).get();
+        if (histSnap.exists()){
+          const updates = {};
+          histSnap.forEach(child => {
+            updates[child.key + '/status'] = isWinner ? 'win' : 'loss';
+            updates[child.key + '/winAmount'] = isWinner ? Number(match.winningPrize) : 0;
+          });
+          await db.ref('matchHistory/' + phone).update(updates);
+        }
+      }
+
+      showToast('বিজয়ী ঘোষণা করা হয়েছে এবং প্রাইজ ক্রেডিট হয়েছে!', 'success');
+      loadMatches();
+    } catch(err){
+      console.error(err);
+      showToast('বিজয়ী ঘোষণা করা যায়নি।', 'error');
+      loadMatches();
+    }
+  }
+
+  async function logAdminTransaction(phone, type, amount, note){
+    try{
+      await db.ref('transactions/' + phone).push().set({
+        type: type, amount: amount, note: note || '',
+        createdAt: firebase.database.ServerValue.TIMESTAMP
+      });
+    } catch(err){ console.error(err); }
+  }
+
+  // ================= ADD MONEY (DEPOSIT) REQUESTS =================
+  // Users submit depositRequests/{TrxID} = { phone, trxId, method, amount,
+  // status:'pending', createdAt }. Admin checks the real bKash/Nagad
+  // inbox, then approves (credits depositBalance) or rejects.
+  let depositCache = {};
+  let depositListening = false;
+  const depMethodLabel = { bkash: 'bKash', nagad: 'Nagad' };
+  const depStatusLabel = { pending: 'পেন্ডিং', approved: 'অ্যাপ্রুভড', rejected: 'রিজেক্টেড' };
+
+  function listenDepositRequests(){
+    if (depositListening) return;
+    depositListening = true;
+    db.ref('depositRequests').on('value', snap => {
+      depositCache = snap.exists() ? snap.val() : {};
+      renderDepositList();
+    }, err => {
+      console.error(err);
+      document.getElementById('depositList').innerHTML = '<div class="empty-note">লোড করা যায়নি।</div>';
+    });
+  }
+
+  function renderDepositList(){
+    const container = document.getElementById('depositList');
+
+    // only pending requests are shown — once approved/rejected they leave this list
+    const pending = Object.keys(depositCache)
+      .map(id => ({ id, ...depositCache[id] }))
+      .filter(i => i.status === 'pending')
+      .sort((a,b) => (a.createdAt||0) - (b.createdAt||0)); // oldest first
+
+    // red count badge on the main menu card
+    const badge = document.getElementById('depPendingBadge');
+    badge.textContent = toBn(pending.length);
+    badge.style.display = pending.length > 0 ? 'flex' : 'none';
+
+    if (pending.length === 0){
+      container.innerHTML = '<div class="empty-note">কোনো পেন্ডিং রিকোয়েস্ট নেই।</div>';
+      return;
+    }
+    container.innerHTML = pending.map(depositItemHtml).join('');
+  }
+
+  function depositItemHtml(item){
+    const user = usersCache.find(u => u.phone === item.phone);
+    const nameLine = user && user.name ? `${user.name} • ` : '';
+    return `
+      <div class="wd-item">
+        <div class="wd-top">
+          <div>
+            <div class="wd-phone">${item.phone}</div>
+            <div class="wd-meta">${nameLine}${formatDateTime(item.createdAt)}</div>
+          </div>
+          <span class="status-badge ${item.status}">${depStatusLabel[item.status] || item.status}</span>
+        </div>
+        <div class="dep-amount-row">
+          <span class="dep-amount">৳${toBn(item.amount)}</span>
+          <span class="dep-method">${depMethodLabel[item.method] || item.method}</span>
+        </div>
+        <div class="wd-meta">TrxID: <span class="dep-trx">${item.id}</span></div>
+        ${item.status === 'pending' ? `
+        <div class="wd-actions">
+          <button class="approve-btn" onclick="processDeposit('${item.id}', 'approved', this)">অ্যাপ্রুভ</button>
+          <button class="reject-btn" onclick="processDeposit('${item.id}', 'rejected', this)">রিজেক্ট</button>
+        </div>` : ''}
+      </div>
+    `;
+  }
+
+  async function processDeposit(trxId, newStatus, btn){
+    const req = depositCache[trxId];
+    if (!req){ showToast('রিকোয়েস্ট খুঁজে পাওয়া যায়নি।', 'error'); return; }
+
+    const approving = newStatus === 'approved';
+    const okToGo = await premiumConfirm({
+      approving: approving,
+      amount: req.amount,
+      phone: req.phone,
+      method: req.method,
+      trxId: trxId
+    });
+    if (!okToGo) return;
+
+    btn.closest('.wd-item').querySelectorAll('button').forEach(b => b.disabled = true);
+
+    try{
+      // Claim the request atomically: only a request that is still
+      // 'pending' can move to approved/rejected, so a double tap (or a
+      // second admin device) can never credit the same TrxID twice.
+      const reqRef = db.ref('depositRequests/' + trxId);
+      const claim = await reqRef.transaction(cur => {
+        if (cur === null) return cur; // not cached yet — Firebase retries with the real value
+        if (cur.status !== 'pending') return; // abort: already processed
+        cur.status = newStatus;
+        cur.processedAt = firebase.database.ServerValue.TIMESTAMP;
+        return cur;
+      });
+
+      if (!claim.committed){
+        showToast('এই রিকোয়েস্ট আগেই প্রসেস করা হয়েছে।', 'error');
+        // already processed elsewhere — drop it from this list too
+        if (depositCache[trxId]) depositCache[trxId].status = 'processed';
+        return;
+      }
+
+      // processed — remove it from the pending list right away
+      if (depositCache[trxId]) depositCache[trxId].status = newStatus;
+      renderDepositList();
+
+      if (approving){
+        const claimed = claim.snapshot.val() || req;
+        const amount = Number(claimed.amount);
+        const phone = claimed.phone;
+
+        const credit = await db.ref('users/' + phone + '/depositBalance')
+          .transaction(cur => (Number(cur) || 0) + amount);
+
+        if (!credit.committed){
+          showToast(`রিকোয়েস্ট অ্যাপ্রুভ হয়েছে কিন্তু ব্যালেন্স যোগ হয়নি! ইউজার ম্যানেজমেন্ট থেকে ${phone}-এর ডিপোজিট ব্যালেন্সে ৳${amount} নিজে যোগ করুন।`, 'error', 9000);
+          return;
+        }
+
+        await logAdminTransaction(phone, 'deposit', amount,
+          `${depMethodLabel[claimed.method] || claimed.method} • TrxID: ${trxId}`);
+        showResultPopup('approved', amount, phone, trxId, claimed.method);
+        loadUsers();
+      } else {
+        showResultPopup('rejected', req.amount, req.phone, trxId, req.method);
+      }
+    } catch(err){
+      console.error(err);
+      showToast('আপডেট করা যায়নি। আবার চেষ্টা করুন।', 'error');
+    } finally {
+      renderDepositList();
+    }
+  }
+
+  // ---- premium confirm dialog (replaces the browser's default confirm for deposits) ----
+  function premiumConfirm({ approving, amount, phone, method, trxId }){
+    return new Promise(resolve => {
+      const overlay = document.getElementById('pcOverlay');
+      const card = document.getElementById('pcCard');
+      card.className = 'pc-card ' + (approving ? 'approve' : 'reject');
+      document.getElementById('pcIcon').textContent = approving ? '💰' : '⚠️';
+      document.getElementById('pcTitle').textContent = approving ? 'অ্যাপ্রুভ করবেন?' : 'রিজেক্ট করবেন?';
+      document.getElementById('pcSub').textContent = approving
+        ? 'টাকা ইউজারের ডিপোজিট ব্যালেন্সে যোগ হবে'
+        : 'এই রিকোয়েস্ট বাতিল হবে, ব্যালেন্সে কিছু যোগ হবে না';
+      document.getElementById('pcAmount').textContent = '৳' + toBn(amount);
+      const user = usersCache.find(u => u.phone === phone);
+      document.getElementById('pcRows').innerHTML = `
+        ${user && user.name ? `<div class="rs-row"><span>নাম</span><b>${user.name}</b></div>` : ''}
+        <div class="rs-row"><span>মোবাইল নম্বর</span><b>${phone}</b></div>
+        <div class="rs-row"><span>মাধ্যম</span><b>${depMethodLabel[method] || method || '—'}</b></div>
+        <div class="rs-row"><span>TrxID</span><b>${trxId}</b></div>
+      `;
+      const okBtn = document.getElementById('pcOk');
+      okBtn.textContent = approving ? 'হ্যাঁ, অ্যাপ্রুভ' : 'হ্যাঁ, রিজেক্ট';
+
+      const cancelBtn = document.getElementById('pcCancel');
+      const finish = (val) => {
+        overlay.classList.remove('open');
+        okBtn.onclick = null; cancelBtn.onclick = null; overlay.onclick = null;
+        resolve(val);
+      };
+      okBtn.onclick = () => finish(true);
+      cancelBtn.onclick = () => finish(false);
+      overlay.onclick = (e) => { if (e.target === overlay) finish(false); };
+      overlay.classList.add('open');
+    });
+  }
+
+  // ---- approve / reject result popup (premium) ----
+  let resultTimer = null;
+  let resultCountTimer = null;
+  function showResultPopup(type, amount, phone, trxId, method){
+    const approved = type === 'approved';
+    const card = document.getElementById('resultCard');
+    card.className = 'result-card ' + type;
+
+    document.getElementById('resultIcon').innerHTML = approved
+      ? '<div class="ri-disc"></div><svg viewBox="0 0 52 52"><path class="rs-mark" d="M13 27l9 9 17-19"/></svg>'
+      : '<div class="ri-disc"></div><svg viewBox="0 0 52 52"><path class="rs-mark" d="M15 15l22 22M37 15L15 37"/></svg>';
+    document.getElementById('resultChip').textContent = approved ? 'Approved' : 'Rejected';
+    document.getElementById('resultTitle').textContent = approved ? 'অ্যাপ্রুভ সফল!' : 'রিকোয়েস্ট রিজেক্ট';
+
+    // amount count-up
+    const amountEl = document.getElementById('resultAmount');
+    const prefix = approved ? '+' : '';
+    const target = Number(amount) || 0;
+    clearInterval(resultCountTimer);
+    if (approved && target > 0){
+      const steps = 24; let n = 0;
+      amountEl.textContent = prefix + '৳' + toBn(0);
+      resultCountTimer = setInterval(() => {
+        n++;
+        const val = n >= steps ? target : Math.round(target * (1 - Math.pow(1 - n/steps, 3)));
+        amountEl.textContent = prefix + '৳' + toBn(val);
+        if (n >= steps) clearInterval(resultCountTimer);
+      }, 32);
+    } else {
+      amountEl.textContent = prefix + '৳' + toBn(target);
+    }
+
+    const methodName = depMethodLabel[method] || method || '—';
+    document.getElementById('resultSub').innerHTML = `
+      <div class="rs-row"><span>মোবাইল নম্বর</span><b>${phone}</b></div>
+      <div class="rs-row"><span>মাধ্যম</span><b>${methodName}</b></div>
+      <div class="rs-row"><span>TrxID</span><b>${trxId}</b></div>
+      <div class="rs-row"><span>স্ট্যাটাস</span><b class="accent">${approved ? 'ডিপোজিট ব্যালেন্সে যোগ হয়েছে' : 'বাতিল • কিছু যোগ হয়নি'}</b></div>
+    `;
+    document.getElementById('resultNote').textContent = 'বন্ধ করতে যেকোনো জায়গায় ট্যাপ করুন';
+
+    // burst particles (approved only)
+    const pBox = document.getElementById('resultParticles');
+    pBox.innerHTML = '';
+    if (approved){
+      const colors = ['#34d399', '#22d3ee', '#f5c451', '#ffffff'];
+      for (let i = 0; i < 18; i++){
+        const angle = (Math.PI * 2 * i) / 18 + (Math.random() * 0.4);
+        const dist = 90 + Math.random() * 90;
+        const p = document.createElement('i');
+        p.style.setProperty('--x', Math.cos(angle) * dist + 'px');
+        p.style.setProperty('--y', Math.sin(angle) * dist + 'px');
+        p.style.setProperty('--c', colors[i % colors.length]);
+        p.style.setProperty('--d', (0.3 + Math.random() * 0.25) + 's');
+        pBox.appendChild(p);
+      }
+    }
+
+    // restart the progress-bar animation each time
+    const bar = document.getElementById('resultBar');
+    bar.style.animation = 'none';
+    void bar.offsetWidth;
+    bar.style.animation = '';
+
+    document.getElementById('resultOverlay').classList.add('open');
+    clearTimeout(resultTimer);
+    resultTimer = setTimeout(hideResultPopup, 3200);
+  }
+  function hideResultPopup(){
+    clearTimeout(resultTimer);
+    clearInterval(resultCountTimer);
+    document.getElementById('resultOverlay').classList.remove('open');
+  }
+
+  // ================= WITHDRAW REQUESTS =================
+  async function loadWithdrawRequests(){
+    const container = document.getElementById('withdrawList');
+    try{
+      const snap = await db.ref('withdrawalRequests').get();
+      if (!snap.exists()){
+        container.innerHTML = '<div class="empty-note">কোনো রিকোয়েস্ট নেই।</div>';
+        return;
+      }
+      const data = snap.val();
+      const items = Object.keys(data).map(id => ({ id, ...data[id] }))
+        .filter(item => item.status !== 'completed')
+        .sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+      if (items.length === 0){
+        container.innerHTML = '<div class="empty-note">কোনো রিকোয়েস্ট নেই।</div>';
+        return;
+      }
+      container.innerHTML = '';
+      items.forEach(item => renderWithdrawItem(item));
+    } catch(err){
+      console.error(err);
+      container.innerHTML = '<div class="empty-note">লোড করা যায়নি।</div>';
+    }
+  }
+
+  function renderWithdrawItem(item){
+    const container = document.getElementById('withdrawList');
+    const wrap = document.createElement('div');
+    wrap.className = 'wd-item';
+    const statusLabel = { pending: 'পেন্ডিং', completed: 'সম্পন্ন', rejected: 'বাতিল' }[item.status] || item.status;
+
+    wrap.innerHTML = `
+      <div class="wd-top">
+        <div>
+          <div class="wd-phone">${item.phone}</div>
+          <div class="wd-meta">${item.method} (${item.accountType}) • পাঠাতে হবে: ${item.recipientNumber}<br>${formatDateTime(item.createdAt)}</div>
+        </div>
+        <span class="status-badge ${item.status}">${statusLabel}</span>
+      </div>
+      <div class="wd-meta">পরিমাণ: ৳${toBn(item.amount)} • ফি: ৳${toBn(item.fee)} • <span class="wd-amt">পাঠাতে হবে: ৳${toBn(item.netAmount)}</span></div>
+      ${item.status === 'pending' ? `
+      <div class="wd-actions">
+        <button class="approve-btn" onclick="processWithdraw('${item.id}', 'completed', this)">সম্পন্ন করুন</button>
+        <button class="reject-btn" onclick="processWithdraw('${item.id}', 'rejected', this)">বাতিল করুন</button>
+      </div>` : ''}
+    `;
+    container.appendChild(wrap);
+  }
+
+  async function processWithdraw(requestId, newStatus, btn){
+    const actionLabel = newStatus === 'completed' ? 'সম্পন্ন' : 'বাতিল';
+    if (!confirm(`এই রিকোয়েস্টটি "${actionLabel}" হিসেবে মার্ক করতে চান?`)) return;
+    btn.closest('.wd-item').querySelectorAll('button').forEach(b => b.disabled = true);
+
+    try{
+      const reqSnap = await db.ref('withdrawalRequests/' + requestId).get();
+      const req = reqSnap.val();
+
+      await db.ref('withdrawalRequests/' + requestId).update({
+        status: newStatus,
+        processedAt: firebase.database.ServerValue.TIMESTAMP
+      });
+
+      if (newStatus === 'rejected'){
+        await db.ref('users/' + req.phone + '/winningBalance')
+          .transaction(cur => (Number(cur) || 0) + Number(req.amount));
+        await logAdminTransaction(req.phone, 'withdraw_refund', Number(req.amount), 'উইথড্র রিকোয়েস্ট বাতিল — ব্যালেন্স ফেরত');
+      }
+
+      showToast(`রিকোয়েস্ট "${actionLabel}" হিসেবে আপডেট হয়েছে।`, 'success');
+      loadWithdrawRequests();
+    } catch(err){
+      console.error(err);
+      showToast('আপডেট করা যায়নি।', 'error');
+      loadWithdrawRequests();
+    }
+  }
+
+  // ================= USER MANAGEMENT =================
+  let usersCache = [];
+
+  async function loadUsers(){
+    try{
+      const snap = await db.ref('users').get();
+      usersCache = snap.exists()
+        ? Object.keys(snap.val()).map(phone => ({ phone, ...snap.val()[phone] }))
+        : [];
+      renderUserList();
+      renderDepositList(); // so deposit cards can show user names
+    } catch(err){
+      console.error(err);
+      document.getElementById('userList').innerHTML = '<div class="empty-note">লোড করা যায়নি।</div>';
+    }
+  }
+
+  function renderUserList(){
+    const q = document.getElementById('userSearchInput').value.trim().toLowerCase();
+    const container = document.getElementById('userList');
+    const filtered = q
+      ? usersCache.filter(u => (u.name||'').toLowerCase().includes(q) || u.phone.includes(q))
+      : usersCache;
+
+    if (filtered.length === 0){
+      container.innerHTML = '<div class="empty-note">কোনো ইউজার পাওয়া যায়নি।</div>';
+      return;
+    }
+
+    container.innerHTML = filtered.map(u => `
+      <div class="user-item">
+        <div class="ui-top">
+          <div><div class="ui-name">${u.name || '—'}</div><div class="ui-phone">${u.phone}</div></div>
+        </div>
+        <div class="ui-meta">রেজিস্ট্রেশন: ${formatDateTime(u.createdAt)}</div>
+        <div class="ui-bal">
+          <span>উইনিং: <b>৳${toBn(u.winningBalance || 0)}</b></span>
+          <span>ডিপোজিট: <b>৳${toBn(u.depositBalance || 0)}</b></span>
+        </div>
+        <div class="adjust-row">
+          <select id="adjType-${u.phone}">
+            <option value="winningBalance">উইনিং ব্যালেন্স</option>
+            <option value="depositBalance">ডিপোজিট ব্যালেন্স</option>
+          </select>
+          <input type="number" id="adjAmount-${u.phone}" placeholder="+৫০ বা -৫০">
+          <button onclick="adjustBalance('${u.phone}', this)">আপডেট</button>
+        </div>
+        <div class="pw-reset-row">
+          <input type="text" id="pwReset-${u.phone}" placeholder="নতুন ৬ সংখ্যার পাসওয়ার্ড" maxlength="6" inputmode="numeric">
+          <button onclick="resetPassword('${u.phone}', this)">রিসেট করুন</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function adjustBalance(phone, btn){
+    const field = document.getElementById('adjType-' + phone).value;
+    const amount = Number(document.getElementById('adjAmount-' + phone).value);
+    if (!amount){ showToast('একটা পরিমাণ লিখুন (যোগ করতে + বা বিয়োগ করতে -)।', 'error'); return; }
+
+    btn.disabled = true;
+    try{
+      const result = await db.ref('users/' + phone + '/' + field).transaction(cur => {
+        const next = (Number(cur) || 0) + amount;
+        return next < 0 ? 0 : next;
+      });
+      if (!result.committed){
+        showToast('ব্যালেন্স আপডেট করা যায়নি।', 'error');
+        return;
+      }
+      await logAdminTransaction(phone, 'admin_adjustment', Math.abs(amount),
+        `অ্যাডমিন সমন্বয়: ${field === 'winningBalance' ? 'উইনিং' : 'ডিপোজিট'} ${amount > 0 ? '+' : ''}${amount}`);
+      showToast('ব্যালেন্স আপডেট হয়েছে!', 'success');
+      document.getElementById('adjAmount-' + phone).value = '';
+      loadUsers();
+    } catch(err){
+      console.error(err);
+      showToast('ব্যালেন্স আপডেট করা যায়নি।', 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ---- password reset (admin sets a new password for a user; the
+  // underlying passwordHash is what auth.html actually checks, so this
+  // produces a hash it will accept — the plaintext itself is never
+  // stored or shown, same as the normal registration flow) ----
+  async function resetPassword(phone, btn){
+    const input = document.getElementById('pwReset-' + phone);
+    const newPassword = input.value.trim();
+
+    if (!isValidSixDigit(newPassword)){
+      showToast('পাসওয়ার্ড অবশ্যই ৬টি সংখ্যার হতে হবে।', 'error');
+      return;
+    }
+    if (!confirm(`${phone}-এর পাসওয়ার্ড পরিবর্তন করতে চান?`)) return;
+
+    btn.disabled = true;
+    try{
+      const passwordHash = await hashPassword(newPassword);
+      await db.ref('users/' + phone + '/passwordHash').set(passwordHash);
+      showToast('পাসওয়ার্ড রিসেট হয়েছে!', 'success');
+      input.value = '';
+    } catch(err){
+      console.error(err);
+      showToast('পাসওয়ার্ড রিসেট করা যায়নি।', 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ================= NOTICE BOARD =================
+  async function loadNotice(){
+    try{
+      const snap = await db.ref('noticeBoard/text').get();
+      document.getElementById('noticeTextInput').value = snap.exists() ? snap.val() : '';
+    } catch(err){ console.error(err); }
+  }
+
+  async function saveNotice(){
+    const text = document.getElementById('noticeTextInput').value.trim();
+    if (!text){ showToast('নোটিশ টেক্সট লিখুন।', 'error'); return; }
+    const btn = document.getElementById('noticeSaveBtn');
+    btn.disabled = true;
+    try{
+      await db.ref('noticeBoard').set({
+        text: text,
+        updatedAt: firebase.database.ServerValue.TIMESTAMP
+      });
+      showToast('নোটিশ বোর্ড আপডেট হয়েছে!', 'success');
+    } catch(err){
+      console.error(err);
+      showToast('নোটিশ আপডেট করা যায়নি।', 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ================= SEND NOTIFICATION (broadcast to all users) =================
+  // Writing to notifications/broadcast is all that's needed — every user's
+  // app listens to this path for the in-app bell, and (if the Cloud
+  // Functions from the push-notification setup are deployed) a function
+  // watching this same path sends the real push to everyone automatically.
+  async function sendBroadcastNotification(){
+    const title = document.getElementById('notifyTitleInput').value.trim();
+    const body = document.getElementById('notifyBodyInput').value.trim();
+    const btn = document.getElementById('notifySendBtn');
+
+    if (!title){ showToast('টাইটেল লিখুন।', 'error'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'পাঠানো হচ্ছে…';
+
+    try{
+      await db.ref('notifications/broadcast').push({
+        title: title,
+        body: body,
+        createdAt: firebase.database.ServerValue.TIMESTAMP
+      });
+      showToast('নোটিফিকেশন সবার কাছে পাঠানো হয়েছে!', 'success');
+      document.getElementById('notifyTitleInput').value = '';
+      document.getElementById('notifyBodyInput').value = '';
+      loadNotifyHistory();
+    } catch(err){
+      console.error(err);
+      showToast('নোটিফিকেশন পাঠানো যায়নি।', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'সবাইকে পাঠান';
+    }
+  }
+
+  async function loadNotifyHistory(){
+    const container = document.getElementById('notifyHistoryList');
+    try{
+      const snap = await db.ref('notifications/broadcast').limitToLast(15).get();
+      if (!snap.exists()){
+        container.innerHTML = '<div class="empty-note">এখনো কোনো নোটিফিকেশন পাঠানো হয়নি।</div>';
+        return;
+      }
+      const data = snap.val();
+      const items = Object.keys(data).map(id => ({ id, ...data[id] }))
+        .sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+      container.innerHTML = items.map(n => `
+        <div class="match-item">
+          <div class="mi-top">
+            <div>
+              <div class="mi-title">${n.title || ''}</div>
+              ${n.body ? `<div class="mi-meta" style="margin-top:4px;">${n.body}</div>` : ''}
+              <div class="mi-meta" style="margin-top:6px;">${formatDateTime(n.createdAt)}</div>
+            </div>
+            <button class="del-btn" onclick="deleteBroadcastNotification('${n.id}', this)">ডিলিট</button>
+          </div>
+        </div>
+      `).join('');
+    } catch(err){
+      console.error(err);
+      container.innerHTML = '<div class="empty-note">হিস্টরি লোড করা যায়নি।</div>';
+    }
+  }
+
+  async function deleteBroadcastNotification(id, btn){
+    if (!confirm('এই নোটিফিকেশনটি ডিলিট করতে চান? এটা সব ইউজারের bell থেকে মুছে যাবে।')) return;
+    btn.disabled = true;
+    try{
+      await db.ref('notifications/broadcast/' + id).remove();
+      showToast('নোটিফিকেশন ডিলিট হয়েছে।', 'success');
+      loadNotifyHistory();
+    } catch(err){
+      console.error(err);
+      showToast('ডিলিট করা যায়নি।', 'error');
+      btn.disabled = false;
+    }
+  }
+</script>
+
+</body>
+</html>

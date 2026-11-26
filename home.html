@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>DLS Tour BD - Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- PWA manifest so the browser can offer an install/download prompt -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#060a10">
+<style>
+  :root{
+    --bg: #060a10;
+    --grid: #0e1520;
+    --cyan: #22d3ee;
+    --magenta: #ec4899;
+    --violet: #8b5cf6;
+    --green: #34d399;
+    --amber: #f5b342;
+    --danger: #f43f5e;
+    --text: #f3f6fa;
+    --muted: #7b869a;
+    --card: rgba(15,20,30,0.7);
+    --card-border: rgba(255,255,255,0.08);
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html, body{
+    width:100%; min-height:100%;
+    background: var(--bg);
+    font-family:'Inter', sans-serif;
+    color: var(--text);
+  }
+
+  body{
+    position:relative;
+    min-height:100vh;
+    padding-bottom: 84px;
+  }
+
+  .grid-field{
+    position:fixed; inset:0;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 42px 42px;
+    -webkit-mask-image: radial-gradient(circle at 50% 0%, black 5%, transparent 65%);
+            mask-image: radial-gradient(circle at 50% 0%, black 5%, transparent 65%);
+    z-index:0;
+  }
+
+  .page{ position:relative; z-index:1; max-width: 480px; margin: 0 auto; padding: 18px 16px 0; }
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .avatar{
+    width: 46px; height:46px;
+    border-radius:50%;
+    flex-shrink:0;
+    background: linear-gradient(135deg, var(--cyan), var(--violet));
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Rajdhani', sans-serif;
+    font-weight:700;
+    font-size:20px;
+    color:#fff;
+    box-shadow: 0 0 0 2px rgba(34,211,238,0.15);
+  }
+
+  .greeting{ flex:1; min-width:0; }
+  .greeting .hi{ font-size:12.5px; color: var(--muted); }
+  .greeting .name{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:18px; letter-spacing:0.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  .balance-pill{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding: 6px 14px;
+    border-radius: 12px;
+    line-height:1.25;
+    flex-shrink:0;
+  }
+  .balance-pill .lbl{ font-size:11px; font-weight:700; letter-spacing:0.5px; }
+  .balance-pill .amt{ font-size:13.5px; font-weight:600; }
+
+  .balance-pill.win{ background: rgba(52,211,153,0.1); border:1px solid rgba(52,211,153,0.35); }
+  .balance-pill.win .lbl{ color: var(--green); }
+
+  .balance-pill.dep{ background: rgba(34,211,238,0.08); border:1px solid rgba(34,211,238,0.3); }
+  .balance-pill.dep .lbl{ color: var(--cyan); }
+
+  /* ---------- notification bell (new) ---------- */
+  .notif-wrap{ position:relative; flex-shrink:0; }
+  .notif-btn{
+    width:44px; height:44px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background: rgba(34,211,238,0.1);
+    border: 1.5px solid rgba(34,211,238,0.45);
+    color: var(--cyan);
+    cursor:pointer;
+    position:relative;
+  }
+  .notif-btn svg{ width:19px; height:19px; }
+  .notif-badge{
+    position:absolute; top:-3px; right:-3px; min-width:16px; height:16px; padding:0 4px; border-radius:9px;
+    background: var(--danger); color:#fff; font-size:10px; font-weight:700; font-family:'Inter', sans-serif;
+    display:none; align-items:center; justify-content:center; border:2px solid var(--bg);
+  }
+  .notif-badge.show{ display:flex; }
+
+  .notif-panel{
+    position:absolute; top: 52px; right:0; width: 300px; max-width: 82vw; z-index:35;
+    background: rgba(12,17,26,0.97); border:1px solid var(--card-border); border-radius:16px;
+    box-shadow:0 20px 40px rgba(0,0,0,0.5); backdrop-filter: blur(12px);
+    display:none; max-height:70vh; overflow:hidden;
+  }
+  .notif-panel.open{ display:block; animation: dropIn 0.18s ease; }
+  .notif-panel-head{ display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid var(--card-border); font-family:'Rajdhani', sans-serif; font-weight:700; font-size:14.5px; }
+  .notif-panel-head button{ background:none; border:none; color: var(--cyan); font-family:'Inter', sans-serif; font-size:11.5px; font-weight:600; cursor:pointer; }
+  #notifList{ max-height:50vh; overflow-y:auto; }
+  .notif-item{ padding:11px 14px; border-bottom:1px solid var(--card-border); cursor:pointer; }
+  .notif-item:last-child{ border-bottom:none; }
+  .notif-item.unread{ background: rgba(34,211,238,0.06); }
+  .notif-item .ni-title{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:13.5px; }
+  .notif-item .ni-body{ font-size:12px; color: var(--muted); margin-top:3px; line-height:1.5; }
+  .notif-item .ni-time{ font-size:10.5px; color: var(--muted); margin-top:5px; }
+  .notif-empty{ text-align:center; padding:20px 10px; color: var(--muted); font-size:12.5px; }
+
+  .support-wrap{ position:relative; flex-shrink:0; }
+
+  .support-btn{
+    width:44px; height:44px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background: rgba(245,179,66,0.1);
+    border: 1.5px solid rgba(245,179,66,0.55);
+    color: var(--amber);
+    cursor:pointer;
+  }
+  .support-btn svg{ width:20px; height:20px; }
+
+  .support-menu{
+    position:absolute;
+    top: 52px; right:0;
+    width: 240px;
+    background: rgba(12,17,26,0.97);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 8px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    display:none;
+    flex-direction:column;
+    gap:4px;
+    z-index: 30;
+    backdrop-filter: blur(12px);
+  }
+  .support-menu.open{ display:flex; animation: dropIn 0.18s ease; }
+
+  @keyframes dropIn{ from{ opacity:0; transform: translateY(-6px); } to{ opacity:1; transform: translateY(0); } }
+
+  .support-row{
+    display:flex;
+    align-items:center;
+    gap:11px;
+    padding: 9px 8px;
+    border-radius: 10px;
+    text-decoration:none;
+    color: var(--text);
+    transition: background 0.15s ease;
+  }
+  .support-row:hover{ background: rgba(255,255,255,0.05); }
+
+  .support-row .ico{
+    width:36px; height:36px;
+    border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .support-row .ico svg{ width:18px; height:18px; }
+  .support-row.telegram .ico{ background: rgba(34,158,255,0.15); color:#2ea6ff; }
+  .support-row.whatsapp .ico{ background: rgba(52,211,153,0.15); color: var(--green); }
+
+  .support-row .label{ font-size:13.5px; font-weight:600; }
+  .support-row .handle{ font-size:12px; color: var(--muted); }
+
+  /* ---------- notice ticker ---------- */
+  .notice{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background: rgba(245,179,66,0.06);
+    border: 1px solid rgba(245,179,66,0.4);
+    border-radius: 13px;
+    padding: 11px 14px;
+    margin-bottom: 14px;
+    overflow:hidden;
+  }
+  .notice .bell{ flex-shrink:0; color: var(--amber); }
+  .notice .bell svg{ width:18px; height:18px; }
+  .notice .track{ flex:1; overflow:hidden; white-space:nowrap; position:relative; }
+  .notice .track span{
+    display:inline-block;
+    padding-left: 100%;
+    font-size: 13.5px;
+    color: var(--text);
+    animation: ticker 16s linear infinite;
+  }
+  @keyframes ticker{
+    from{ transform: translateX(0); }
+    to{ transform: translateX(-100%); }
+  }
+
+  /* ---------- banner carousel ---------- */
+  .banner-viewport{
+    position:relative;
+    height: 118px;
+    border-radius: 18px;
+    overflow:hidden;
+    margin-bottom: 22px;
+  }
+
+  .banner-slide{
+    position:absolute; inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    gap:6px;
+    padding: 14px 22px;
+    opacity:0;
+    transform: translateX(16px);
+    transition: opacity 0.45s ease, transform 0.45s ease;
+    pointer-events:none;
+  }
+  .banner-slide.active{ opacity:1; transform: translateX(0); pointer-events:auto; }
+
+  .banner-slide.b1{ background: linear-gradient(135deg, #0d5c56, #1a6ea8); }
+  .banner-slide.b2{ background: linear-gradient(135deg, #5b2a8f, #1e5fb0); }
+  .banner-slide.b3{ background: linear-gradient(135deg, #0f6b5c, #157a8c); }
+
+  .banner-slide .line1{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:16px; color: var(--green); letter-spacing:0.3px; }
+  .banner-slide .line2{ font-size: 13px; color: var(--text); line-height:1.5; }
+  .banner-slide .line1.white{ color: #fff; }
+
+  .banner-dots{
+    position:absolute;
+    bottom: 10px; left:0; right:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    z-index:2;
+  }
+  .banner-dots .dot{
+    width:7px; height:7px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.35);
+    transition: width 0.25s ease, background 0.25s ease;
+  }
+  .banner-dots .dot.active{ width:22px; background: var(--cyan); }
+
+  /* ---------- section title ---------- */
+  .section-title{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom: 12px;
+  }
+  .section-title svg{ width:19px; height:19px; color: var(--cyan); }
+  .section-title span{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:17px; letter-spacing:0.3px; }
+
+  /* ---------- category card ---------- */
+  .category-card{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    width:100%;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    cursor:pointer;
+    text-align:left;
+    color: var(--text);
+    font-family:'Inter', sans-serif;
+    transition: border-color 0.15s ease, transform 0.1s ease;
+  }
+  .category-card:active{ transform: scale(0.99); }
+  .category-card:hover{ border-color: rgba(34,211,238,0.35); }
+
+  .category-icon{
+    width:52px; height:52px;
+    border-radius: 14px;
+    background: radial-gradient(circle at 35% 30%, #1c2a44, #0b1220);
+    border: 1px solid rgba(34,211,238,0.2);
+    display:flex; align-items:center; justify-content:center;
+    font-size: 26px;
+    flex-shrink:0;
+  }
+
+  .category-info{ flex:1; min-width:0; }
+  .category-info .title{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:16px; letter-spacing:0.4px; }
+  .category-info .sub{ font-size:12.5px; color: var(--muted); margin-top:2px; }
+
+  .category-card svg.chev{ width:18px; height:18px; color: var(--cyan); flex-shrink:0; }
+
+  /* ---------- bottom nav ---------- */
+  .bottom-nav{
+    position:fixed;
+    left:0; right:0; bottom:0;
+    z-index:20;
+    display:flex;
+    background: rgba(9,13,20,0.94);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(14px);
+    padding: 8px 6px 10px;
+  }
+  .nav-item{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    background:none;
+    border:none;
+    color: var(--muted);
+    font-family:'Inter', sans-serif;
+    font-size: 11px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .nav-item svg{ width:21px; height:21px; }
+  .nav-item.active{ color: var(--cyan); }
+
+  @media (max-width:380px){
+    .balance-pill{ padding:6px 9px; }
+  }
+
+  /* ---------- floating app-download popup (bottom-left) ---------- */
+  .app-download-fab{
+    position: fixed;
+    left: 14px;
+    bottom: 96px;
+    z-index: 40;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding: 11px 16px;
+    border:none;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--cyan), var(--violet));
+    color:#fff;
+    font-family:'Inter', sans-serif;
+    font-weight:600;
+    font-size: 13px;
+    cursor:pointer;
+    box-shadow: 0 10px 24px rgba(34,211,238,0.3);
+    animation: fabPulse 2.4s ease-in-out infinite;
+  }
+  .app-download-fab svg{ width:17px; height:17px; flex-shrink:0; }
+  .app-download-fab:active{ transform: scale(0.97); }
+
+  @keyframes fabPulse{
+    0%, 100%{ box-shadow: 0 10px 24px rgba(34,211,238,0.3); }
+    50%{ box-shadow: 0 10px 30px rgba(139,92,246,0.45); }
+  }
+
+  /* toast notifications (for app-download feedback) */
+  .toast-stack{
+    position: fixed;
+    left: 50%;
+    bottom: 26px;
+    transform: translateX(-50%);
+    z-index: 50;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    width: min(360px, 92vw);
+  }
+  .toast{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    background: rgba(15,20,30,0.92);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-left: 3px solid var(--cyan);
+    border-radius: 12px;
+    padding: 13px 14px;
+    font-size: 13.5px;
+    line-height:1.5;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.4);
+    animation: toastIn 0.28s ease;
+    backdrop-filter: blur(10px);
+  }
+  .toast.success{ border-left-color: var(--green); }
+  .toast .icon{ flex-shrink:0; margin-top:1px; color: var(--cyan); }
+  .toast.success .icon{ color: var(--green); }
+  .toast .icon svg{ width:16px; height:16px; }
+  @keyframes toastIn{ from{ opacity:0; transform: translateY(10px); } to{ opacity:1; transform: translateY(0); } }
+  .toast.out{ animation: toastOut 0.24s ease forwards; }
+  @keyframes toastOut{ to{ opacity:0; transform: translateY(-6px); } }
+
+  @media (max-width:380px){
+    .app-download-fab{ font-size:12px; padding:9px 13px; bottom: 92px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grid-field"></div>
+
+<div class="page">
+
+  <!-- top bar -->
+  <div class="topbar">
+    <div class="avatar" id="avatarLetter">?</div>
+    <div class="greeting">
+      <div class="hi">স্বাগতম 👋</div>
+      <div class="name" id="userName">লোড হচ্ছে…</div>
+    </div>
+
+    <div class="balance-pill win">
+      <span class="lbl">W</span>
+      <span class="amt" id="winBalance">৳০</span>
+    </div>
+    <div class="balance-pill dep">
+      <span class="lbl">D</span>
+      <span class="amt" id="depBalance">৳০</span>
+    </div>
+
+    <div class="notif-wrap">
+      <button class="notif-btn" onclick="toggleNotifPanel()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="notif-badge" id="notifBadge">0</span>
+      </button>
+      <div class="notif-panel" id="notifPanel">
+        <div class="notif-panel-head">
+          <span>নোটিফিকেশন</span>
+          <button onclick="markAllRead()">সব পড়া হয়েছে</button>
+        </div>
+        <div id="notifList"><div class="notif-empty">লোড হচ্ছে…</div></div>
+      </div>
+    </div>
+
+    <div class="support-wrap">
+      <button class="support-btn" onclick="toggleSupportMenu()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+      </button>
+      <div class="support-menu" id="supportMenu">
+        <a class="support-row telegram" href="https://t.me/+8801859793158" target="_blank" rel="noopener">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.94 4.6 18.6 20.2c-.25 1.1-.9 1.37-1.82.85l-5.03-3.71-2.43 2.34c-.27.27-.5.5-1.02.5l.36-5.16 9.4-8.5c.41-.36-.09-.56-.63-.2L6.4 12.3l-4.98-1.56c-1.08-.34-1.1-1.08.23-1.6L20.6 3.03c.9-.33 1.69.2 1.34 1.57z"/></svg></span>
+          <span>
+            <span class="label" style="display:block;">Telegram সাপোর্ট</span>
+            <span class="handle">01859793158</span>
+          </span>
+        </a>
+        <a class="support-row whatsapp" href="https://wa.me/8801859793158" target="_blank" rel="noopener">
+          <span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.5 0-9.96 4.46-9.96 9.96 0 1.76.46 3.4 1.26 4.83L2 22l5.36-1.29a9.9 9.9 0 0 0 4.68 1.19h.01c5.5 0 9.96-4.46 9.96-9.96 0-2.66-1.04-5.16-2.92-7.04A9.9 9.9 0 0 0 12.04 2Zm5.8 14.24c-.24.68-1.4 1.3-1.93 1.34-.5.05-1.02.24-3.4-.7-2.87-1.14-4.7-4.07-4.85-4.26-.14-.2-1.15-1.53-1.15-2.92s.72-2.07.98-2.35c.25-.28.55-.35.74-.35h.53c.17 0 .4-.06.62.48.24.58.8 2 .87 2.15.07.15.12.32.02.51-.1.2-.15.32-.3.5-.15.17-.3.39-.44.52-.15.15-.3.3-.13.6.17.3.76 1.26 1.64 2.04 1.13 1 2.08 1.32 2.38 1.47.3.15.47.13.65-.08.17-.2.72-.84.92-1.13.2-.28.4-.24.66-.14.28.09 1.7.8 1.99.95.3.15.49.22.56.35.08.13.08.72-.16 1.4Z"/></svg></span>
+          <span>
+            <span class="label" style="display:block;">WhatsApp সাপোর্ট</span>
+            <span class="handle">01859793158</span>
+          </span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- notice ticker -->
+  <div class="notice">
+    <span class="bell">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    </span>
+    <div class="track"><span id="noticeText">📣 স্বাগতম Dls Tour Bd তে! নতুন ম্যাচ যোগ হয়েছে। এখনই জয়েন করুন।</span></div>
+  </div>
+
+  <!-- banner carousel -->
+  <div class="banner-viewport">
+    <div class="banner-slide b1 active">
+      <div class="line1">💬 যেকোনো সমস্যায় Telegram/WhatsApp এ যোগাযোগ করুন</div>
+      <div class="line2">গ্রুপে জয়েন থাকুন ও নোটিশ বোর্ড দেখুন</div>
+    </div>
+    <div class="banner-slide b2">
+      <div class="line1">📞 24 HOURS সাপোর্ট</div>
+      <div class="line2" style="font-family:'Rajdhani',sans-serif; font-weight:700; letter-spacing:0.5px; color:#fff;">TELEGRAM &amp; WHATSAPP</div>
+    </div>
+    <div class="banner-slide b3">
+      <div class="line1">🏆 BANGLADESH 1ST DLS TOUR BD</div>
+      <div class="line2 white">PROVIDED BY RAHIM BHAI</div>
+    </div>
+    <div class="banner-dots">
+      <span class="dot active" data-i="0"></span>
+      <span class="dot" data-i="1"></span>
+      <span class="dot" data-i="2"></span>
+    </div>
+  </div>
+
+  <!-- match category -->
+  <div class="section-title">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="6"/></svg>
+    <span>ম্যাচ ক্যাটাগরি</span>
+  </div>
+
+  <button class="category-card" onclick="openMatchCategory()">
+    <div class="category-icon">⚽</div>
+    <div class="category-info">
+      <div class="title">DLS 1V1 MATCH</div>
+      <div class="sub">১ ভি ১ ম্যাচে অংশ নিন</div>
+    </div>
+    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+
+</div>
+
+<!-- floating app-download popup -->
+<button class="app-download-fab" id="appDownloadBtn" onclick="downloadApp()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+  অ্যাপ ডাউনলোড করুন
+</button>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<!-- bottom nav -->
+<div class="bottom-nav">
+  <button class="nav-item active" onclick="location.href='home.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18 4.5 4.5 0 0 0 0-9 4.5 4.5 0 0 1 0-9Z"/></svg>
+    ম্যাচ
+  </button>
+  <button class="nav-item" onclick="location.href='history.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+    হিস্টোরি
+  </button>
+  <button class="nav-item" onclick="location.href='wallet.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5h-4a2 2 0 0 1 0-4h4Z"/></svg>
+    ওয়ালেট
+  </button>
+  <button class="nav-item" onclick="location.href='profile.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    প্রোফাইল
+  </button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMt3Ra3GMGS4uwn6-LGHwOw4XuFIcR-aE",
+    authDomain: "dls-tournament-bd-d8f0a.firebaseapp.com",
+    databaseURL: "https://dls-tournament-bd-d8f0a-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "dls-tournament-bd-d8f0a",
+    storageBucket: "dls-tournament-bd-d8f0a.firebasestorage.app",
+    messagingSenderId: "705815077213",
+    appId: "1:705815077213:web:6e6df3452b17147a3648b4"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // ---- session guard: no login, no home page ----
+  const sessionPhone = localStorage.getItem('gf_session_phone');
+  if (!sessionPhone){
+    window.location.href = 'auth.html';
+  }
+
+  // ---- load user profile + balances ----
+  function bengaliDigits(num){
+    const map = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    return String(num).replace(/[0-9]/g, d => map[d]);
+  }
+
+  async function loadProfile(){
+    try{
+      const snap = await db.ref('users/' + sessionPhone).get();
+      if (!snap.exists()){
+        localStorage.removeItem('gf_session_phone');
+        window.location.href = 'auth.html';
+        return;
+      }
+      const user = snap.val();
+      const name = user.name || 'খেলোয়াড়';
+      document.getElementById('userName').textContent = name;
+      document.getElementById('avatarLetter').textContent = name.trim().charAt(0).toUpperCase();
+      document.getElementById('winBalance').textContent = '৳' + bengaliDigits(user.winningBalance || 0);
+      document.getElementById('depBalance').textContent = '৳' + bengaliDigits(user.depositBalance || 0);
+    } catch(err){
+      console.error(err);
+    }
+  }
+  loadProfile();
+
+  // ---- notice board (live) ----
+  db.ref('noticeBoard/text').on('value', (snap) => {
+    if (snap.exists() && snap.val()){
+      document.getElementById('noticeText').textContent = snap.val();
+    }
+  });
+
+  // ---- notification bell (full in-app panel, same model as profile.html) ----
+  // notifications/broadcast/{id}  = { title, body, createdAt } — written by admin, common to everyone
+  // users/{phone}/readNotifs/{id} = true                        — per-user read state
+  let allNotifs = [];
+  let latestBroadcast = {};
+  let readMap = {};
+
+  function notifFormatDateTime(ts){
+    if (!ts) return '';
+    const d = new Date(ts);
+    const day = String(d.getDate()).padStart(2,'0');
+    const month = String(d.getMonth()+1).padStart(2,'0');
+    const year = d.getFullYear();
+    let hours = d.getHours();
+    const mins = String(d.getMinutes()).padStart(2,'0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    return `${day}/${month}/${year} · ${hours}:${mins} ${ampm}`;
+  }
+
+  function toggleNotifPanel(){
+    document.getElementById('notifPanel').classList.toggle('open');
+  }
+
+  function updateNotifBadge(count){
+    const badge = document.getElementById('notifBadge');
+    if (count > 0){ badge.classList.add('show'); badge.textContent = count > 9 ? '৯+' : bengaliDigits(count); }
+    else { badge.classList.remove('show'); }
+  }
+
+  function renderNotifList(){
+    const container = document.getElementById('notifList');
+    const unread = allNotifs.filter(n => !n.read);
+    if (!unread.length){
+      container.innerHTML = `<div class="notif-empty">কোনো নতুন নোটিফিকেশন নেই।</div>`;
+      return;
+    }
+    container.innerHTML = unread.map(n => `
+      <div class="notif-item unread" onclick="markNotifRead('${n.id}')">
+        <div class="ni-title">${n.title || 'নোটিফিকেশন'}</div>
+        ${n.body ? `<div class="ni-body">${n.body}</div>` : ''}
+        <div class="ni-time">${notifFormatDateTime(n.createdAt)}</div>
+      </div>
+    `).join('');
+  }
+
+  function recomputeNotifs(){
+    allNotifs = Object.keys(latestBroadcast).map(id => ({
+      id,
+      ...latestBroadcast[id],
+      read: !!readMap[id]
+    })).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    renderNotifList();
+    updateNotifBadge(allNotifs.filter(n => !n.read).length);
+  }
+
+  function markNotifRead(id){
+    db.ref(`users/${sessionPhone}/readNotifs/${id}`).set(true).catch(err => console.error(err));
+  }
+
+  function markAllRead(){
+    const updates = {};
+    allNotifs.forEach(n => { if (!n.read) updates[n.id] = true; });
+    if (Object.keys(updates).length === 0) return;
+    db.ref('users/' + sessionPhone + '/readNotifs').update(updates).catch(err => console.error(err));
+  }
+
+  db.ref('notifications/broadcast').on('value', snap => {
+    latestBroadcast = snap.val() || {};
+    recomputeNotifs();
+  });
+  db.ref('users/' + sessionPhone + '/readNotifs').on('value', snap => {
+    readMap = snap.val() || {};
+    recomputeNotifs();
+  });
+
+  document.addEventListener('click', (e) => {
+    const wrap = document.querySelector('.notif-wrap');
+    if (wrap && !wrap.contains(e.target)){
+      document.getElementById('notifPanel').classList.remove('open');
+    }
+  });
+
+  // ---- support dropdown ----
+  function toggleSupportMenu(){
+    document.getElementById('supportMenu').classList.toggle('open');
+  }
+  document.addEventListener('click', (e) => {
+    const wrap = document.querySelector('.support-wrap');
+    if (!wrap.contains(e.target)){
+      document.getElementById('supportMenu').classList.remove('open');
+    }
+  });
+
+  // ---- banner carousel ----
+  const slides = document.querySelectorAll('.banner-slide');
+  const dots = document.querySelectorAll('.banner-dots .dot');
+  let activeSlide = 0;
+
+  function goToSlide(i){
+    slides[activeSlide].classList.remove('active');
+    dots[activeSlide].classList.remove('active');
+    activeSlide = i % slides.length;
+    slides[activeSlide].classList.add('active');
+    dots[activeSlide].classList.add('active');
+  }
+
+  setInterval(() => goToSlide(activeSlide + 1), 3800);
+
+  // ---- match category ----
+  function openMatchCategory(){
+    window.location.href = 'dls-1v1-match.html';
+  }
+
+  // =========================================================
+  // ---- App download popup logic (same as auth.html) ----
+  // This site becomes the "app" via PWA install (Add to Home
+  // Screen) — no separate .apk needed. Requires this page to be
+  // served over HTTPS together with manifest.json and
+  // service-worker.js (and the icons/ folder) in the same folder.
+  // =========================================================
+  let deferredInstallPrompt = null;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+  });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js').catch(() => {});
+  }
+
+  function isIOS(){
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  }
+
+  function showToast(message, type = 'info', duration = 3200){
+    const stack = document.getElementById('toastStack');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span><span>${message}</span>`;
+    stack.appendChild(toast);
+    setTimeout(() => {
+      toast.classList.add('out');
+      setTimeout(() => toast.remove(), 240);
+    }, duration);
+  }
+
+  async function downloadApp(){
+    if (deferredInstallPrompt){
+      deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice;
+      if (choice.outcome === 'accepted'){
+        showToast('অ্যাপ ইনস্টল হচ্ছে…', 'success');
+      }
+      deferredInstallPrompt = null;
+    } else if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone){
+      showToast('অ্যাপটি ইতিমধ্যে ইনস্টল করা আছে।', 'info');
+    } else if (isIOS()){
+      showToast('নিচের শেয়ার (Share) বাটনে চাপ দিয়ে "Add to Home Screen" সিলেক্ট করুন।', 'info', 5000);
+    } else {
+      showToast('আপনার ব্রাউজারের মেনু থেকে "Install app" / "Add to Home Screen" সিলেক্ট করুন।', 'info', 5000);
+    }
+  }
+</script>
+
+</body>
+</html>

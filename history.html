@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ম্যাচ হিস্টোরি - DLS Tour BD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #060a10;
+    --grid: #0e1520;
+    --cyan: #22d3ee;
+    --violet: #8b5cf6;
+    --gold: #f5c451;
+    --green: #34d399;
+    --danger: #f43f5e;
+    --muted: #7b869a;
+    --text: #f3f6fa;
+    --card: rgba(13,18,28,0.82);
+    --card-border: rgba(255,255,255,0.08);
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html, body{ width:100%; min-height:100%; background: var(--bg); font-family:'Inter', sans-serif; color: var(--text); }
+  body{ position:relative; min-height:100vh; padding-bottom: 84px; }
+
+  .grid-field{
+    position:fixed; inset:0;
+    background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 42px 42px;
+    -webkit-mask-image: radial-gradient(circle at 50% 0%, black 5%, transparent 65%);
+            mask-image: radial-gradient(circle at 50% 0%, black 5%, transparent 65%);
+    z-index:0;
+  }
+
+  .page{ position:relative; z-index:1; max-width:480px; margin:0 auto; padding: 16px 16px 0; }
+
+  .topbar{ display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+  .back-btn{ width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; background: var(--card); border:1px solid var(--card-border); color: var(--cyan); cursor:pointer; flex-shrink:0; }
+  .back-btn svg{ width:19px; height:19px; }
+  .topbar-title{ flex:1; display:flex; align-items:center; gap:9px; font-family:'Rajdhani', sans-serif; font-weight:700; font-size:19px; letter-spacing:0.3px; }
+  .topbar-title svg{ width:19px; height:19px; color: var(--cyan); }
+
+  /* ---- stats bar ---- */
+  .stats-bar{
+    display:flex; justify-content:space-around; align-items:center;
+    background: var(--card); border:1px solid var(--card-border); border-radius:18px;
+    padding: 18px 10px; margin-bottom:16px;
+  }
+  .stat{ display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .stat-ico{ width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; }
+  .stat-ico svg{ width:17px; height:17px; }
+  .stat.total .stat-ico{ background: rgba(34,211,238,0.14); color: var(--cyan); }
+  .stat.win .stat-ico{ background: rgba(52,211,153,0.14); color: var(--green); }
+  .stat.loss .stat-ico{ background: rgba(244,63,94,0.12); color: var(--danger); }
+  .stat-label{ font-size:11.5px; color: var(--muted); }
+  .stat-value{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:15px; margin-top:-4px; }
+
+  /* ---- filter chips ---- */
+  .filter-row{ display:flex; gap:8px; margin-bottom:18px; overflow-x:auto; padding-bottom:2px; }
+  .filter-chip{
+    flex-shrink:0; padding:9px 16px; border-radius:20px; border:1px solid var(--card-border);
+    background: var(--card); color: var(--muted); font-size:13px; font-weight:600; cursor:pointer;
+    font-family:'Inter', sans-serif; white-space:nowrap;
+  }
+  .filter-chip.active{ background: linear-gradient(135deg, rgba(34,211,238,0.24), rgba(139,92,246,0.24)); border-color: rgba(34,211,238,0.45); color: var(--text); }
+
+  /* ---- match cards ---- */
+  #matchHistoryList{ display:flex; flex-direction:column; gap:12px; }
+  .mh-card{
+    background: var(--card); border:1px solid var(--card-border); border-radius:16px; padding: 14px 15px;
+  }
+  .mh-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:8px; }
+  .mh-title{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:15.5px; }
+  .mh-date{ font-size:11px; color: var(--muted); margin-top:2px; }
+  .mh-badge{ font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; flex-shrink:0; }
+  .mh-badge.win{ background: rgba(52,211,153,0.14); color: var(--green); }
+  .mh-badge.loss{ background: rgba(244,63,94,0.12); color: var(--danger); }
+  .mh-badge.ongoing{ background: rgba(245,196,81,0.12); color: var(--gold); }
+
+  .mh-bottom{ display:flex; justify-content:space-between; align-items:center; font-size:12.5px; color: var(--muted); }
+  .mh-amt{ font-family:'JetBrains Mono', monospace; font-weight:600; font-size:14px; }
+  .mh-amt.win{ color: var(--green); }
+  .mh-amt.loss{ color: var(--danger); }
+  .mh-amt.ongoing{ color: var(--gold); }
+
+  /* ---- empty state ---- */
+  .empty-state{ text-align:center; padding: 50px 20px 20px; }
+  .empty-ring{
+    width:96px; height:96px; border-radius:50%; margin:0 auto 20px;
+    background: rgba(34,211,238,0.08); border:1px solid rgba(34,211,238,0.3);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .empty-ring svg{ width:38px; height:38px; color: var(--cyan); }
+  .empty-title{ font-family:'Rajdhani', sans-serif; font-weight:700; font-size:19px; margin-bottom:8px; }
+  .empty-sub{ font-size:13px; color: var(--muted); line-height:1.7; margin-bottom:22px; }
+  .empty-btn{
+    display:inline-block; padding:13px 30px; border-radius:13px; border:none;
+    background: linear-gradient(135deg, var(--cyan), var(--violet)); color:#fff;
+    font-family:'Inter', sans-serif; font-weight:600; font-size:14.5px; cursor:pointer; text-decoration:none;
+  }
+
+  /* ---- bottom nav ---- */
+  .bottom-nav{ position:fixed; left:0; right:0; bottom:0; z-index:20; display:flex; background: rgba(9,13,20,0.94); border-top:1px solid rgba(255,255,255,0.06); backdrop-filter: blur(14px); padding:8px 6px 10px; }
+  .nav-item{ flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; background:none; border:none; color: var(--muted); font-family:'Inter', sans-serif; font-size:11px; font-weight:600; cursor:pointer; }
+  .nav-item svg{ width:21px; height:21px; }
+  .nav-item.active{ color: var(--cyan); }
+</style>
+</head>
+<body>
+
+<div class="grid-field"></div>
+
+<div class="page">
+  <div class="topbar">
+    <button class="back-btn" onclick="location.href='home.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <div class="topbar-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+      ম্যাচ হিস্টোরি
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat total">
+      <div class="stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+      <div class="stat-value" id="statTotal">০</div>
+      <div class="stat-label">মোট ম্যাচ</div>
+    </div>
+    <div class="stat win">
+      <div class="stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M5 9a3 3 0 0 1-3-3V5h3"/><path d="M19 9a3 3 0 0 0 3-3V5h-3"/></svg></div>
+      <div class="stat-value" id="statWin">০</div>
+      <div class="stat-label">জয়</div>
+    </div>
+    <div class="stat loss">
+      <div class="stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+      <div class="stat-value" id="statLoss">০</div>
+      <div class="stat-label">পরাজয়</div>
+    </div>
+  </div>
+
+  <div class="filter-row">
+    <button class="filter-chip active" data-filter="all" onclick="setFilter('all', this)">সব ম্যাচ</button>
+    <button class="filter-chip" data-filter="win" onclick="setFilter('win', this)">জয়</button>
+    <button class="filter-chip" data-filter="loss" onclick="setFilter('loss', this)">পরাজয়</button>
+    <button class="filter-chip" data-filter="ongoing" onclick="setFilter('ongoing', this)">চলমান</button>
+  </div>
+
+  <div id="matchHistoryList"></div>
+</div>
+
+<!-- bottom nav -->
+<div class="bottom-nav">
+  <button class="nav-item" onclick="location.href='home.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18 4.5 4.5 0 0 0 0-9 4.5 4.5 0 0 1 0-9Z"/></svg>
+    ম্যাচ
+  </button>
+  <button class="nav-item active" onclick="location.href='history.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+    হিস্টোরি
+  </button>
+  <button class="nav-item" onclick="location.href='wallet.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5h-4a2 2 0 0 1 0-4h4Z"/></svg>
+    ওয়ালেট
+  </button>
+  <button class="nav-item" onclick="location.href='profile.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    প্রোফাইল
+  </button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMt3Ra3GMGS4uwn6-LGHwOw4XuFIcR-aE",
+    authDomain: "dls-tournament-bd-d8f0a.firebaseapp.com",
+    databaseURL: "https://dls-tournament-bd-d8f0a-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "dls-tournament-bd-d8f0a",
+    storageBucket: "dls-tournament-bd-d8f0a.firebasestorage.app",
+    messagingSenderId: "705815077213",
+    appId: "1:705815077213:web:6e6df3452b17147a3648b4"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  const sessionPhone = localStorage.getItem('gf_session_phone');
+  if (!sessionPhone){ window.location.href = 'auth.html'; }
+
+  const bnDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+  function toBn(num){ return String(num).replace(/[0-9]/g, d => bnDigits[d]); }
+
+  function formatDate(ts){
+    if (!ts) return '';
+    const d = new Date(ts);
+    const day = String(d.getDate()).padStart(2,'0');
+    const month = String(d.getMonth()+1).padStart(2,'0');
+    const year = d.getFullYear();
+    let hours = d.getHours();
+    const mins = String(d.getMinutes()).padStart(2,'0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    return `${day}/${month}/${year} · ${hours}:${mins} ${ampm}`;
+  }
+
+  const statusLabel = { win: 'জয়', loss: 'পরাজয়', ongoing: 'চলমান' };
+
+  let allMatches = [];
+  let currentFilter = 'all';
+
+  async function loadMatchHistory(){
+    try{
+      const snap = await db.ref('matchHistory/' + sessionPhone).get();
+      if (!snap.exists()){
+        allMatches = [];
+        updateStats();
+        renderList();
+        return;
+      }
+      const data = snap.val();
+      allMatches = Object.keys(data).map(key => ({ id: key, ...data[key] }))
+        .sort((a, b) => (b.joinedAt || 0) - (a.joinedAt || 0));
+      updateStats();
+      renderList();
+    } catch(err){
+      console.error(err);
+      document.getElementById('matchHistoryList').innerHTML = `<div class="mh-card">হিস্টোরি লোড করা যায়নি।</div>`;
+    }
+  }
+
+  function updateStats(){
+    const total = allMatches.length;
+    const wins = allMatches.filter(m => m.status === 'win').length;
+    const losses = allMatches.filter(m => m.status === 'loss').length;
+    document.getElementById('statTotal').textContent = toBn(total);
+    document.getElementById('statWin').textContent = toBn(wins);
+    document.getElementById('statLoss').textContent = toBn(losses);
+  }
+
+  function setFilter(filter, btn){
+    currentFilter = filter;
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    renderList();
+  }
+
+  function renderList(){
+    const container = document.getElementById('matchHistoryList');
+    const filtered = currentFilter === 'all' ? allMatches : allMatches.filter(m => m.status === currentFilter);
+
+    if (filtered.length === 0){
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-ring">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+          </div>
+          <div class="empty-title">কোনো হিস্টোরি নেই</div>
+          <div class="empty-sub">আপনি এখনো কোনো ম্যাচে অংশ নেননি।<br>এখনই একটি ম্যাচে জয়েন করুন!</div>
+          <a class="empty-btn" href="dls-1v1-match.html">ম্যাচ দেখুন</a>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = filtered.map(m => {
+      const status = m.status || 'ongoing';
+      const label = statusLabel[status] || 'চলমান';
+      const amountText = status === 'win' ? `+৳${toBn(m.winAmount || m.winningPrize || 0)}`
+                        : status === 'loss' ? `-৳${toBn(m.entryFee || 0)}`
+                        : `এন্ট্রি ফি: ৳${toBn(m.entryFee || 0)}`;
+      return `
+        <div class="mh-card">
+          <div class="mh-top">
+            <div>
+              <div class="mh-title">${m.matchTitle || 'ম্যাচ'}</div>
+              <div class="mh-date">${formatDate(m.joinedAt)}</div>
+            </div>
+            <span class="mh-badge ${status}">${label}</span>
+          </div>
+          <div class="mh-bottom">
+            <span>DLS 1V1 ম্যাচ</span>
+            <span class="mh-amt ${status}">${amountText}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  loadMatchHistory();
+</script>
+
+</body>
+</html>
